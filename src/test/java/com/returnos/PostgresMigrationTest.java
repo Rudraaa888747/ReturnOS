@@ -54,7 +54,11 @@ class PostgresMigrationTest {
                             "returns",
                             "return_items",
                             "inspections",
-                            "audit_logs");
+                            "audit_logs",
+                            "risk_assessments",
+                            "risk_factors",
+                            "disposition_evaluations",
+                            "disposition_candidates");
         }
     }
 }

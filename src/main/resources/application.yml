@@ -47,6 +47,32 @@ returnos:
   jwt:
     secret: ${JWT_SECRET:change-me-to-a-very-long-random-secret-for-dev-only-min-32-chars}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  risk:
+    recent-window-days: ${RISK_RECENT_WINDOW_DAYS:30}
+    points-per-recent-return: ${RISK_POINTS_PER_RECENT_RETURN:8}
+    max-recent-points: ${RISK_MAX_RECENT_POINTS:32}
+    lifetime-tier1-count: 3
+    lifetime-tier1-points: 5
+    lifetime-tier2-count: 6
+    lifetime-tier2-points: 10
+    high-value-threshold: ${RISK_HIGH_VALUE_THRESHOLD:5000}
+    high-value-points: 10
+    repeat-product-points: 12
+    multi-item-threshold: 2
+    multi-item-points: 6
+    medium-threshold: ${RISK_MEDIUM_THRESHOLD:30}
+    high-threshold: ${RISK_HIGH_THRESHOLD:60}
+  disposition:
+    restock-rate: 0.95
+    resell-rate: 0.70
+    refurbish-rate: 0.80
+    liquidate-rate: 0.35
+    recycle-rate: 0.10
+    vendor-rate: 1.00
+    processing-cost: ${DISPOSITION_PROCESSING_COST:150}
+    shipping-cost: ${DISPOSITION_SHIPPING_COST:250}
+    refurbishment-cost: ${DISPOSITION_REFURBISHMENT_COST:600}
+    vendor-window-days: ${DISPOSITION_VENDOR_WINDOW_DAYS:30}
 
 springdoc:
   api-docs:

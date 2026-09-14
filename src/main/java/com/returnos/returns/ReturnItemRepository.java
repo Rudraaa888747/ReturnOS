@@ -19,4 +19,16 @@ public interface ReturnItemRepository extends JpaRepository<ReturnItem, UUID> {
             @Param("orderId") UUID orderId, @Param("orderItemId") UUID orderItemId);
 
     List<ReturnItem> findByProductReturnId(UUID returnId);
+
+    @Query("""
+            select count(distinct ri.productReturn.id) from ReturnItem ri
+            where ri.productReturn.customer.id = :customerId
+              and ri.product.id = :productId
+              and ri.productReturn.id <> :excludeReturnId
+              and ri.productReturn.status <> com.returnos.returns.ReturnStatus.REJECTED
+            """)
+    long countOtherActiveReturnsWithProduct(
+            @Param("customerId") UUID customerId,
+            @Param("productId") UUID productId,
+            @Param("excludeReturnId") UUID excludeReturnId);
 }

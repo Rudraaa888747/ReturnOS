@@ -1,5 +1,6 @@
 package com.returnos.returns;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -25,4 +26,8 @@ public interface ReturnRepository extends JpaRepository<Return, UUID> {
     Page<Return> findByStatus(ReturnStatus status, Pageable pageable);
 
     boolean existsByReturnNumber(String returnNumber);
+
+    long countByCustomerId(UUID customerId);
+
+    long countByCustomerIdAndCreatedAtAfter(UUID customerId, Instant after);
 }

@@ -1,7 +1,8 @@
-# ReturnOS — Phase 1
+# ReturnOS — Phase 1 + Phase 2
 
 Product-return lifecycle backend (modular monolith). Phase 1 covers the basic lifecycle
-up to warehouse inspection. No disposition/risk engine yet (Phase 2).
+up to warehouse inspection. Phase 2 adds the risk + disposition/recovery decision
+platform after inspection (deterministic, explainable, no ML).
 
 ## Tech
 
@@ -82,6 +83,20 @@ Receiving has two explicit channels via the required `mode` field on
 The wrong mode for the current status is rejected with `422 INVALID_TRANSITION`,
 and the `RETURN_RECEIVED` audit entry records which channel was used
 ("via carrier shipment" vs "via counter/drop-off").
+
+## Phase 2 — risk + disposition (after INSPECTION_COMPLETED)
+
+* Risk: `POST /api/v1/returns/{id}/risk/assess` (201 first, 200 repeat), `GET .../risk`.
+  Rule-based score 0-100 → LOW/MEDIUM/HIGH with per-rule explanations. Operational
+  attention signal only — never a fraud accusation. Tunables: `RISK_*` in `.env.example`.
+* Disposition: `POST .../disposition/evaluate` (201/200), `GET .../disposition`,
+  `POST .../disposition/finalize` (`{}` accepts the recommendation),
+  `POST .../disposition/override` (admin only, reason mandatory).
+  7 channels evaluated (RESTOCK/REFURBISH/RESELL/RETURN_TO_VENDOR/LIQUIDATE/RECYCLE/SCRAP),
+  best eligible net recovery wins; economics in `DISPOSITION_*` vars.
+* Money math: BigDecimal, scale 2 HALF_UP, negative inputs rejected.
+* Audit: `RISK_ASSESSMENT_CREATED`, `DISPOSITION_EVALUATED/RECOMMENDED/OVERRIDDEN`,
+  `FINAL_DISPOSITION_RECORDED`. Original recommendation is never overwritten.
 
 ## Structure
 
