@@ -34,10 +34,37 @@ Swagger UI: http://localhost:8080/swagger-ui.html · Health: `/actuator/health`
 ```
 
 * Unit: policy rules, state machine (`ReturnPolicyServiceTest`, `ReturnStatusTest`)
-* Integration (H2): auth/authorization, full return lifecycle, inspection, audit
+* Integration (H2): auth/authorization, return lifecycle incl. customer status
+  pagination, shipment vs counter receive modes, inspection, audit
   (`AuthIntegrationTest`, `ReturnLifecycleIntegrationTest`)
-* `PostgresMigrationTest` runs the Flyway baseline against real PostgreSQL;
-  skipped automatically when Docker is unavailable.
+* Real PostgreSQL (Docker-gated, see below): `PostgresMigrationTest`,
+  `PostgresLifecycleTest`
+
+## Real PostgreSQL verification (required before Phase 2)
+
+The app targets PostgreSQL + Flyway (`ddl-auto=validate`). H2 is only used for fast
+unit/integration feedback (Flyway stays disabled there because Flyway 11 ships no H2
+database module); real-database proof comes from the container tests, which abort
+with "skipped" instead of passing when Docker is unavailable.
+
+```bash
+docker compose up -d   # postgres:16-alpine, db/user/password = returnos, port 5432
+
+# Postgres-only verification (migration + full lifecycle on real PostgreSQL):
+./mvnw test -Dtest='PostgresMigrationTest,PostgresLifecycleTest'
+
+# Full suite with Docker: H2 tests + both PostgreSQL tests actually run.
+./mvnw test
+
+# Run the app itself against local PostgreSQL:
+cp .env.example .env   # fill in real values, never commit secrets
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+`PostgresLifecycleTest` boots the whole Spring context against the container with
+Flyway enabled and `ddl-auto=validate`, so a green run proves startup, migration,
+Hibernate/Flyway schema agreement, repository persistence and return-lifecycle
+persistence on real PostgreSQL.
 
 ## Lifecycle
 
@@ -46,9 +73,15 @@ Swagger UI: http://localhost:8080/swagger-ui.html · Health: `/actuator/health`
 Invalid transitions return `422 INVALID_TRANSITION`. Returns are versioned
 (`@Version`) for optimistic locking; concurrent updates return `409`.
 
-Note: `POST /api/v1/returns/{id}/ship` (mark in-transit) is a small addition to the
-suggested endpoint list so the customer-ships step is explicit; `receive` also accepts
-direct `APPROVED → RECEIVED` for counter returns.
+Receiving has two explicit channels via the required `mode` field on
+`POST /api/v1/returns/{id}/receive` (`{"mode":"SHIPPED"}` or `{"mode":"COUNTER"}`):
+
+* shipment: `APPROVED → IN_TRANSIT` (`.../ship`) `→ RECEIVED` (mode `SHIPPED`)
+* counter/drop-off: `APPROVED → RECEIVED` directly (mode `COUNTER`, no shipping step)
+
+The wrong mode for the current status is rejected with `422 INVALID_TRANSITION`,
+and the `RETURN_RECEIVED` audit entry records which channel was used
+("via carrier shipment" vs "via counter/drop-off").
 
 ## Structure
 

@@ -1,5 +1,6 @@
 package com.returnos.returns;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,11 @@ public final class ReturnDtos {
 
     public record RejectReturnRequest(
             @NotNull @Size(min = 3, max = 1000) String reason) {}
+
+    @Schema(description = "Declares how the goods arrived so the correct receive path is enforced")
+    public record ReceiveReturnRequest(
+            @NotNull @Schema(description = "SHIPPED for carrier delivery (requires IN_TRANSIT), "
+                    + "COUNTER for in-person drop-off (requires APPROVED)") ReceiveMode mode) {}
 
     public record ReturnItemResponse(
             UUID id, UUID orderItemId, UUID productId, String sku,

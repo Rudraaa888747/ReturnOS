@@ -1,6 +1,9 @@
 package com.returnos.returns;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,6 +19,7 @@ import com.returnos.user.Role;
 import com.returnos.user.User;
 import com.returnos.user.UserRepository;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -165,9 +169,12 @@ class ReturnLifecycleIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("IN_TRANSIT"));
 
-        // 6. receive
+        // 6. receive as carrier shipment
+        String receiveBody = objectMapper.writeValueAsString(Map.of("mode", "SHIPPED"));
         mockMvc.perform(post("/api/v1/returns/" + returnId + "/receive")
-                        .header("Authorization", "Bearer " + staffToken))
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(receiveBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("INSPECTION_PENDING"))
                 .andExpect(jsonPath("$.receivedAt").isNotEmpty());
@@ -211,10 +218,14 @@ class ReturnLifecycleIntegrationTest {
                 .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.rejectionReason").isNotEmpty());
 
-        // rejected return cannot be received
+        // rejected return cannot be received (neither channel)
+        String counterBody = objectMapper.writeValueAsString(Map.of("mode", "COUNTER"));
         mockMvc.perform(post("/api/v1/returns/" + returnId + "/receive")
-                        .header("Authorization", "Bearer " + staffToken))
-                .andExpect(status().isUnprocessableEntity());
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(counterBody))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_TRANSITION"));
     }
 
     @Test
@@ -259,6 +270,187 @@ class ReturnLifecycleIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(returnBody))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void customerStatusFilterPaginatesCorrectly() throws Exception {
+        // One order with 4 line items so the customer owns 4 returns.
+        String orderBody = objectMapper.writeValueAsString(Map.of(
+                "items", List.of(
+                        Map.of("productId", product.getId().toString(), "quantity", 1),
+                        Map.of("productId", product.getId().toString(), "quantity", 1),
+                        Map.of("productId", product.getId().toString(), "quantity", 1),
+                        Map.of("productId", product.getId().toString(), "quantity", 1))));
+        String orderResp = mockMvc.perform(post("/api/v1/orders")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(orderBody))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        JsonNode orderJson = objectMapper.readTree(orderResp);
+        UUID orderId = UUID.fromString(orderJson.get("id").asText());
+        List<UUID> orderItemIds = new ArrayList<>();
+        orderJson.get("items").forEach(n -> orderItemIds.add(UUID.fromString(n.get("id").asText())));
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/deliver")
+                        .header("Authorization", "Bearer " + staffToken))
+                .andExpect(status().isOk());
+
+        List<UUID> returnIds = new ArrayList<>();
+        for (UUID orderItemId : orderItemIds) {
+            returnIds.add(createReturn(orderId, orderItemId, 1, "DEFECTIVE"));
+        }
+        // 3 APPROVED, 1 REJECTED
+        for (int i = 0; i < 3; i++) {
+            mockMvc.perform(post("/api/v1/returns/" + returnIds.get(i) + "/approve")
+                            .header("Authorization", "Bearer " + staffToken))
+                    .andExpect(status().isOk());
+        }
+        String rejectBody = objectMapper.writeValueAsString(Map.of("reason", "Not eligible for return"));
+        mockMvc.perform(post("/api/v1/returns/" + returnIds.get(3) + "/reject")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(rejectBody))
+                .andExpect(status().isOk());
+
+        // Page 1 of APPROVED (2 of 3 total) - filtering must happen in the database,
+        // so totalElements/totalPages reflect all matching rows, not just the page.
+        mockMvc.perform(get("/api/v1/returns")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .param("status", "APPROVED")
+                        .param("size", "2")
+                        .param("page", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[*].status", everyItem(is("APPROVED"))));
+
+        // Page 2 of APPROVED (remaining 1)
+        mockMvc.perform(get("/api/v1/returns")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .param("status", "APPROVED")
+                        .param("size", "2")
+                        .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[*].status", everyItem(is("APPROVED"))));
+
+        // REJECTED filter finds the single rejected return.
+        mockMvc.perform(get("/api/v1/returns")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .param("status", "REJECTED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[*].status", everyItem(is("REJECTED"))));
+
+        // No filter sees all 4 returns.
+        mockMvc.perform(get("/api/v1/returns")
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(4));
+    }
+
+    @Test
+    void counterReceiveFlow() throws Exception {
+        UUID returnId = createReturn(deliveredOrderId, deliveredOrderItemId, 1, "WRONG_SIZE");
+
+        mockMvc.perform(post("/api/v1/returns/" + returnId + "/approve")
+                        .header("Authorization", "Bearer " + staffToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+
+        // Counter/drop-off: APPROVED -> RECEIVED directly, no shipping step involved.
+        String counterBody = objectMapper.writeValueAsString(Map.of("mode", "COUNTER"));
+        mockMvc.perform(post("/api/v1/returns/" + returnId + "/receive")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(counterBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("INSPECTION_PENDING"))
+                .andExpect(jsonPath("$.receivedAt").isNotEmpty());
+
+        // Audit must distinguish the counter channel from a carrier shipment.
+        assertThat(auditLogs.findAll()).anyMatch(l ->
+                l.getAction() == AuditAction.RETURN_RECEIVED
+                        && l.getEntityId().equals(returnId.toString())
+                        && l.getReason() != null
+                        && l.getReason().contains("counter/drop-off"));
+
+        // Inspection still completes normally after a counter receive.
+        String inspectionBody = objectMapper.writeValueAsString(Map.of(
+                "physicalCondition", "EXCELLENT",
+                "packagingCondition", "SEALED",
+                "accessoriesComplete", true,
+                "functionalTestResult", "NOT_TESTED",
+                "notes", "Counter drop-off, looks untouched"));
+        mockMvc.perform(post("/api/v1/returns/" + returnId + "/inspection")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(inspectionBody))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/returns/" + returnId)
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("INSPECTION_COMPLETED"));
+    }
+
+    @Test
+    void receiveModeMismatchIsRejected() throws Exception {
+        String shippedBody = objectMapper.writeValueAsString(Map.of("mode", "SHIPPED"));
+        String counterBody = objectMapper.writeValueAsString(Map.of("mode", "COUNTER"));
+
+        // Return A stays APPROVED: carrier mode must be rejected, counter mode accepted.
+        UUID returnA = createReturn(deliveredOrderId, deliveredOrderItemId, 1, "DAMAGED");
+        mockMvc.perform(post("/api/v1/returns/" + returnA + "/approve")
+                        .header("Authorization", "Bearer " + staffToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/returns/" + returnA + "/receive")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(shippedBody))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_TRANSITION"));
+
+        // Return B goes IN_TRANSIT: counter mode must be rejected, carrier mode accepted.
+        UUID returnB = createReturn(deliveredOrderId, deliveredOrderItemId, 1, "DEFECTIVE");
+        mockMvc.perform(post("/api/v1/returns/" + returnB + "/approve")
+                        .header("Authorization", "Bearer " + staffToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/returns/" + returnB + "/ship")
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/returns/" + returnB + "/receive")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(counterBody))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_TRANSITION"));
+
+        mockMvc.perform(post("/api/v1/returns/" + returnB + "/receive")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(shippedBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("INSPECTION_PENDING"));
+
+        assertThat(auditLogs.findAll()).anyMatch(l ->
+                l.getAction() == AuditAction.RETURN_RECEIVED
+                        && l.getEntityId().equals(returnB.toString())
+                        && l.getReason() != null
+                        && l.getReason().contains("carrier shipment"));
+
+        // Missing body is ambiguous and must be rejected, not guessed.
+        mockMvc.perform(post("/api/v1/returns/" + returnA + "/receive")
+                        .header("Authorization", "Bearer " + staffToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
     }
 
     private UUID createReturn(UUID orderId, UUID orderItemId, int qty, String reason) throws Exception {

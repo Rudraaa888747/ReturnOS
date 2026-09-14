@@ -16,6 +16,9 @@ public interface ReturnRepository extends JpaRepository<Return, UUID> {
     Page<Return> findByCustomerId(UUID customerId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"items", "order", "customer"})
+    Page<Return> findByCustomerIdAndStatus(UUID customerId, ReturnStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"items", "order", "customer"})
     Page<Return> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"items", "order", "customer"})

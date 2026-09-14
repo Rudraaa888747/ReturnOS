@@ -130,15 +130,9 @@ public class ReturnService {
         User current = securityUtils.currentUser();
         Page<Return> page;
         if (current.getRole() == Role.CUSTOMER) {
-            page = returns.findByCustomerId(current.getId(), pageable);
-            // In-memory status filter for customer view (keeps repo simple)
-            if (status != null) {
-                List<ReturnDtos.ReturnResponse> filtered = page.getContent().stream()
-                        .filter(r -> r.getStatus() == status)
-                        .map(ReturnDtos.ReturnResponse::from)
-                        .toList();
-                return new org.springframework.data.domain.PageImpl<>(filtered, pageable, filtered.size());
-            }
+            page = status != null
+                    ? returns.findByCustomerIdAndStatus(current.getId(), status, pageable)
+                    : returns.findByCustomerId(current.getId(), pageable);
         } else if (status != null) {
             page = returns.findByStatus(status, pageable);
         } else {
@@ -198,22 +192,39 @@ public class ReturnService {
     }
 
     @Transactional
-    public ReturnDtos.ReturnResponse receive(UUID id) {
+    public ReturnDtos.ReturnResponse receive(UUID id, ReceiveMode mode) {
         User staff = securityUtils.currentUser();
         requireStaffOrAdmin(staff);
-        Return productReturn = loadForUpdate(id);
-        if (productReturn.getStatus() != ReturnStatus.APPROVED
-                && productReturn.getStatus() != ReturnStatus.IN_TRANSIT) {
-            throw new InvalidStateException("INVALID_TRANSITION", "Only APPROVED or IN_TRANSIT returns can be received");
+        if (mode == null) {
+            throw new BusinessException("RECEIVE_MODE_REQUIRED", "Receive mode is required: SHIPPED or COUNTER");
         }
+        Return productReturn = loadForUpdate(id);
+        if (mode == ReceiveMode.SHIPPED && productReturn.getStatus() != ReturnStatus.IN_TRANSIT) {
+            throw new InvalidStateException(
+                    "INVALID_TRANSITION",
+                    "Only IN_TRANSIT returns can be received as carrier shipment (mode SHIPPED). "
+                            + "Counter/drop-off returns must use mode COUNTER. Current status: "
+                            + productReturn.getStatus());
+        }
+        if (mode == ReceiveMode.COUNTER && productReturn.getStatus() != ReturnStatus.APPROVED) {
+            throw new InvalidStateException(
+                    "INVALID_TRANSITION",
+                    "Only APPROVED returns can be received as counter/drop-off (mode COUNTER). "
+                            + "Shipped returns must use mode SHIPPED. Current status: "
+                            + productReturn.getStatus());
+        }
+        ReturnStatus fromStatus = productReturn.getStatus();
         productReturn.transitionTo(ReturnStatus.RECEIVED);
         productReturn.setReceivedAt(Instant.now());
         productReturn.setReceivedBy(staff);
         // Move to inspection queue in the same transaction so warehouse can inspect next.
         productReturn.transitionTo(ReturnStatus.INSPECTION_PENDING);
+        String auditReason = mode == ReceiveMode.SHIPPED
+                ? "Return received via carrier shipment"
+                : "Return received via counter/drop-off";
         auditService.log(
                 AuditAction.RETURN_RECEIVED, "Return", productReturn.getId().toString(),
-                staff.getEmail(), "Return received at warehouse", null);
+                staff.getEmail(), auditReason, "mode=" + mode + ",fromStatus=" + fromStatus);
         return ReturnDtos.ReturnResponse.from(productReturn);
     }
 

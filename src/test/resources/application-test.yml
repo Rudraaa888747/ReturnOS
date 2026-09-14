@@ -12,6 +12,10 @@ spring:
     properties:
       hibernate:
         globally_quoted_identifiers: false
+  # Flyway stays OFF for the H2 suite only: Flyway 11 ships no H2 database module,
+  # so migrations cannot run on H2. Production uses Flyway + validate, and real
+  # PostgreSQL proof comes from the Docker-gated PostgresMigrationTest /
+  # PostgresLifecycleTest (Flyway enabled + ddl-auto=validate there).
   flyway:
     enabled: false
 

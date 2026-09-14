@@ -54,6 +54,13 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(400, "VALIDATION_FAILED", "Request validation failed", req.getRequestURI(), errors));
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(
+            org.springframework.http.converter.HttpMessageNotReadableException ex, HttpServletRequest req) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiError.of(400, "MALFORMED_REQUEST", "Request body is missing or malformed", req.getRequestURI()));
+    }
+
     @ExceptionHandler({AccessDeniedException.class})
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)

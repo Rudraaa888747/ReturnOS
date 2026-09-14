@@ -73,9 +73,17 @@ public class ReturnController {
     }
 
     @PostMapping("/{id}/receive")
-    @Operation(summary = "Mark return as received (staff/admin)")
-    public ResponseEntity<ReturnDtos.ReturnResponse> receive(@PathVariable UUID id) {
-        return ResponseEntity.ok(returnService.receive(id));
+    @Operation(
+            summary = "Mark return as received (staff/admin)",
+            description = "Two explicit receiving channels, selected via the required `mode` field. "
+                    + "Use `SHIPPED` for a normal carrier shipment (return must be IN_TRANSIT, "
+                    + "i.e. previously marked shipped). Use `COUNTER` for an in-person counter/drop-off "
+                    + "handover (return must still be APPROVED - it never travels, so it never becomes "
+                    + "IN_TRANSIT). The wrong mode for the current status is rejected with 422, "
+                    + "and the channel is recorded on the RETURN_RECEIVED audit entry.")
+    public ResponseEntity<ReturnDtos.ReturnResponse> receive(
+            @PathVariable UUID id, @Valid @RequestBody ReturnDtos.ReceiveReturnRequest request) {
+        return ResponseEntity.ok(returnService.receive(id, request.mode()));
     }
 
     @PostMapping("/{id}/inspection")
