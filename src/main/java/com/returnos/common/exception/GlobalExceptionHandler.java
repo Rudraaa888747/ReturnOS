@@ -61,6 +61,17 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(400, "MALFORMED_REQUEST", "Request body is missing or malformed", req.getRequestURI()));
     }
 
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> handleUnsupportedMediaType(
+            org.springframework.web.HttpMediaTypeNotSupportedException ex, HttpServletRequest req) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(ApiError.of(
+                        415,
+                        "UNSUPPORTED_MEDIA_TYPE",
+                        "Content-Type is missing or not supported; use application/json",
+                        req.getRequestURI()));
+    }
+
     @ExceptionHandler({AccessDeniedException.class})
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)

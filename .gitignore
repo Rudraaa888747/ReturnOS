@@ -7,3 +7,6 @@ target/
 logs/
 *.log
 .mvn/wrapper/maven-wrapper.jar
+
+demo.log
+demo-err.log

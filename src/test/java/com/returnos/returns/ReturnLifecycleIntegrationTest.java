@@ -451,6 +451,14 @@ class ReturnLifecycleIntegrationTest {
                         .header("Authorization", "Bearer " + staffToken))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
+
+        // Wrong content type must not leak a 500.
+        mockMvc.perform(post("/api/v1/returns/" + returnA + "/receive")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("{\"mode\":\"COUNTER\"}"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
     }
 
     private UUID createReturn(UUID orderId, UUID orderItemId, int qty, String reason) throws Exception {
