@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: ReturnOS
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/returnos}
+    username: ${DATABASE_USER:returnos}
+    password: ${DATABASE_PASSWORD:returnos}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+returnos:
+  policy:
+    return-window-days: ${RETURN_WINDOW_DAYS:30}
+    blocked-categories: ${BLOCKED_CATEGORIES:}
+    changed-mind-window-days: ${CHANGED_MIND_WINDOW_DAYS:14}
+  jwt:
+    secret: ${JWT_SECRET:change-me-to-a-very-long-random-secret-for-dev-only-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.returnos: INFO
+    org.hibernate.SQL: WARN

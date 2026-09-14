@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: returnos-postgres
+    environment:
+      POSTGRES_DB: returnos
+      POSTGRES_USER: returnos
+      POSTGRES_PASSWORD: returnos
+    ports:
+      - "5432:5432"
+    volumes:
+      - returnos-pgdata:/var/lib/postgresql/data
+
+volumes:
+  returnos-pgdata:

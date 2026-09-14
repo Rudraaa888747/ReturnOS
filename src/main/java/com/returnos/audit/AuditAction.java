@@ -1,0 +1,11 @@
+package com.returnos.audit;
+
+public enum AuditAction {
+    RETURN_CREATED,
+    RETURN_APPROVED,
+    RETURN_REJECTED,
+    RETURN_SHIPPED,
+    RETURN_RECEIVED,
+    INSPECTION_STARTED,
+    INSPECTION_COMPLETED
+}
