@@ -119,6 +119,30 @@ and the `RETURN_RECEIVED` audit entry records which channel was used
 * Observability: Actuator `returnOps` health details + `returnos.*` Micrometer
   counters (executions, settlements, tasks). Structured logs carry return/execution/actor.
 
+## Frontend — ReturnOS web app (`frontend/`)
+
+React 19 + TypeScript + Vite + react-router, hand-rolled "Dock Ledger" design
+system (CSS tokens, no UI template), lucide icons, hand-drawn SVG charts,
+Vitest + Testing Library. Real backend APIs only — no mocked data.
+
+```bash
+cd frontend
+cp .env.example .env        # optional; empty = use Vite proxy below
+npm install
+npm run dev                 # http://localhost:5173, /api proxied to :8080
+npm test                    # frontend tests (20)
+npm run build               # production bundle in frontend/dist
+```
+
+Backend serves the API on :8080 (see Quick start). Browsers need CORS, allowed
+via `CORS_ALLOWED_ORIGINS` (default `http://localhost:5173`, see `.env.example`).
+Demo logins: customer@returnos.dev / staff@returnos.dev / admin@returnos.dev
+(passwords in Quick start). JWT lives in `sessionStorage`; no refresh tokens.
+
+Role homes: `/` customer dashboard · `/ops` warehouse · `/admin` control center.
+Full customer journey (request → approve → receive → inspect → risk →
+disposition → finalize → execute → settle) is clickable end-to-end in the UI.
+
 ## Structure
 
 `com.returnos`: `auth` · `user` · `product` · `order` · `returns` · `policy` ·

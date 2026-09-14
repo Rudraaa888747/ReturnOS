@@ -20,5 +20,8 @@ public interface OperationalTaskRepository extends JpaRepository<OperationalTask
 
     List<OperationalTask> findByProductReturnId(UUID returnId);
 
+    @EntityGraph(attributePaths = {"productReturn", "execution", "assignee"})
+    Page<OperationalTask> findByProductReturnId(UUID returnId, Pageable pageable);
+
     long countByExecutionIdAndTypeAndStatus(UUID executionId, TaskType type, TaskStatus status);
 }

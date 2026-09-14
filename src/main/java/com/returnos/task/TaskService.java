@@ -90,11 +90,17 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskDtos.TaskResponse> list(Boolean mine, TaskStatus status, Pageable pageable) {
+    public Page<TaskDtos.TaskResponse> list(UUID returnId, Boolean mine, TaskStatus status, Pageable pageable) {
         User current = securityUtils.currentUser();
         requireStaffOrAdmin(current);
         Page<OperationalTask> page;
-        if (Boolean.TRUE.equals(mine) && status != null) {
+        if (returnId != null) {
+            // Validates the return exists so typos fail loudly instead of returning empty.
+            if (!returns.existsById(returnId)) {
+                throw new ResourceNotFoundException("RETURN_NOT_FOUND", "Return not found: " + returnId);
+            }
+            page = tasks.findByProductReturnId(returnId, pageable);
+        } else if (Boolean.TRUE.equals(mine) && status != null) {
             page = tasks.findByAssigneeIdAndStatus(current.getId(), status, pageable);
         } else if (Boolean.TRUE.equals(mine)) {
             page = tasks.findByAssigneeId(current.getId(), pageable);

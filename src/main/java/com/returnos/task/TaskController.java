@@ -31,13 +31,14 @@ public class TaskController {
     @GetMapping
     @Operation(
             summary = "List operational tasks (staff/admin)",
-            description = "Use mine=true to see only work assigned to the caller. "
-                    + "Customers are denied: tasks are warehouse operations.")
+            description = "Use mine=true to see only work assigned to the caller, or returnId to see "
+                    + "work for one return. Customers are denied: tasks are warehouse operations.")
     public ResponseEntity<Page<TaskDtos.TaskResponse>> list(
+            @RequestParam(required = false) UUID returnId,
             @RequestParam(required = false) Boolean mine,
             @RequestParam(required = false) TaskStatus status,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(taskService.list(mine, status, pageable));
+        return ResponseEntity.ok(taskService.list(returnId, mine, status, pageable));
     }
 
     @PostMapping

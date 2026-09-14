@@ -1,0 +1,89 @@
+.viewport {
+  position: fixed;
+  bottom: var(--sp-5);
+  right: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  z-index: 90;
+  max-width: min(360px, calc(100vw - var(--sp-8)));
+}
+
+.toast {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-start;
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-body);
+  box-shadow: var(--shadow-pop);
+  animation: toast-in var(--dur-med) var(--ease-out);
+}
+
+.toastError {
+  background: var(--bad);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 29, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  z-index: 80;
+  animation: fade-in var(--dur-fast) var(--ease-out);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.dialog {
+  background: var(--surface-overlay);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  padding: var(--sp-6);
+  width: 100%;
+  max-width: 460px;
+  animation: dialog-in var(--dur-med) var(--ease-out);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.dialog h2 {
+  font-size: var(--fs-title);
+  margin-bottom: var(--sp-2);
+}
+
+.dialog p {
+  color: var(--ink-2);
+  margin-bottom: var(--sp-5);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}

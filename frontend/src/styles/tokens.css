@@ -1,0 +1,105 @@
+/* Dock Ledger — ReturnOS design tokens. Single source of truth for the visual system. */
+
+:root {
+  /* Type */
+  --font-ui: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-data: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --fs-label: 0.75rem;
+  --fs-meta: 0.8125rem;
+  --fs-body: 0.875rem;
+  --fs-title-sm: 1rem;
+  --fs-title: 1.125rem;
+  --fs-page: 1.625rem;
+  --fs-metric: 1.5rem;
+  --lh-tight: 1.25;
+  --lh-body: 1.5;
+  --tracking-display: -0.02em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing (4px base) */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+
+  /* Surfaces */
+  --paper: #f4f5f1;
+  --surface: #ffffff;
+  --surface-sunken: #eceee8;
+  --surface-overlay: #ffffff;
+
+  /* Ink */
+  --ink: #14181d;
+  --ink-2: #3c434d;
+  --ink-3: #5b6470;
+  --ink-faint: #8a93a0;
+
+  /* Lines */
+  --line: #e1e4e8;
+  --line-strong: #c9ced5;
+
+  /* Brand: harbour teal */
+  --brand: #0b5f55;
+  --brand-strong: #08473f;
+  --brand-soft: #e2efec;
+  --brand-ink: #ffffff;
+
+  /* Semantic */
+  --ok: #3e7c4f;
+  --ok-soft: #e6f0e8;
+  --warn: #b7791f;
+  --warn-soft: #f7ecd4;
+  --bad: #b3372f;
+  --bad-soft: #f7e3e1;
+  --info: #2f5d8a;
+  --info-soft: #e2ebf4;
+
+  /* Risk (always paired with label + icon) */
+  --risk-low: #3e7c4f;
+  --risk-low-soft: #e6f0e8;
+  --risk-medium: #b7791f;
+  --risk-medium-soft: #f7ecd4;
+  --risk-high: #b3372f;
+  --risk-high-soft: #f7e3e1;
+
+  /* Disposition markers (muted, text-led) */
+  --disp-restock: #3e7c4f;
+  --disp-refurbish: #0b5f55;
+  --disp-resell: #2f5d8a;
+  --disp-vendor: #8a6d1f;
+  --disp-liquidate: #b7791f;
+  --disp-recycle: #5f7a5f;
+  --disp-scrap: #6b7280;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Elevation: flat panels, one soft shadow reserved for overlays */
+  --shadow-pop: 0 8px 28px rgba(20, 24, 29, 0.14), 0 2px 6px rgba(20, 24, 29, 0.1);
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-med: 180ms;
+  --ease-out: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Layout */
+  --measure-ops: 1200px;
+  --measure-read: 880px;
+  --nav-w: 248px;
+  --topbar-h: 60px;
+
+  /* Breakpoints (mirror in hooks via matchMedia where needed) */
+  --bp-sm: 640px;
+  --bp-md: 960px;
+  --bp-lg: 1280px;
+}

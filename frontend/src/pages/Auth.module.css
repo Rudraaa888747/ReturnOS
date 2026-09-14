@@ -1,0 +1,64 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6) var(--sp-4);
+  background:
+    radial-gradient(1200px 400px at 50% -100px, var(--brand-soft), transparent),
+    var(--paper);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-8);
+  box-shadow: var(--shadow-pop);
+  animation: card-in var(--dur-med) var(--ease-out);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-weight: var(--weight-bold);
+  color: var(--brand-strong);
+  margin-bottom: var(--sp-4);
+}
+
+.card h1 {
+  font-size: 1.375rem;
+  margin-bottom: var(--sp-1);
+}
+
+.sub {
+  color: var(--ink-3);
+  font-size: var(--fs-body);
+  margin-bottom: var(--sp-5);
+}
+
+.foot {
+  margin-top: var(--sp-5);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.demo {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px dashed var(--line);
+  font-size: var(--fs-meta);
+  color: var(--ink-faint);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+}
