@@ -26,6 +26,14 @@ public class RecoveryCalculator {
         return new RecoveryBreakdown(recovery, processing, shipping, refurbishment, scale(net));
     }
 
+    /**
+     * Normalises a single provided amount to scale 2, rejecting null/negative
+     * values. Reused by operational services so money rules stay in one place.
+     */
+    public BigDecimal amount(String field, BigDecimal value) {
+        return money(field, value);
+    }
+
     private BigDecimal money(String field, BigDecimal value) {
         if (value == null) {
             throw new BusinessException("INVALID_AMOUNT", field + " must be provided");

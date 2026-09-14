@@ -58,7 +58,13 @@ class PostgresMigrationTest {
                             "risk_assessments",
                             "risk_factors",
                             "disposition_evaluations",
-                            "disposition_candidates");
+                            "disposition_candidates",
+                            "disposition_executions",
+                            "inventory_recoveries",
+                            "vendor_claims",
+                            "recovery_records",
+                            "disposal_records",
+                            "operational_tasks");
         }
     }
 }

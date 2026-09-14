@@ -98,6 +98,27 @@ and the `RETURN_RECEIVED` audit entry records which channel was used
 * Audit: `RISK_ASSESSMENT_CREATED`, `DISPOSITION_EVALUATED/RECOMMENDED/OVERRIDDEN`,
   `FINAL_DISPOSITION_RECORDED`. Original recommendation is never overwritten.
 
+## Phase 3 — operational execution (after FINAL DISPOSITION)
+
+* Execution: `POST /api/v1/returns/{id}/execution/start|complete|fail`, `GET .../execution`.
+  PENDING (auto-created at finalize) → IN_PROGRESS → COMPLETED/FAILED. Completion
+  requires the channel record matching the final disposition; `duration_seconds`
+  is stored for analytics. Optimistic locking (`@Version`) everywhere.
+* Channels: `POST .../restock` (unique per execution), vendor claim
+  `POST .../vendor-claim` + `/submit|acknowledge|approve|reject|settle`
+  (DRAFT→…→SETTLED), `POST .../recovery` + `/list|sell|settle|fail|correct`
+  (expected vs actual, admin corrections audited), `POST .../disposal/complete`.
+  Repeats are rejected by checks + unique constraints — no double counting.
+* Tasks: `/api/v1/operations/tasks` (+ `?mine`, `?status`), `/{id}/start|complete|cancel|assign`.
+  Only assignee/admin complete; customers denied; reassigns audited.
+* History: `GET /api/v1/returns/{id}/history` — lifecycle + risk + disposition +
+  execution + channels + tasks + chronological audit events (actors hidden from customers).
+* Analytics (admin): `GET /api/v1/admin/analytics/returns|recovery` — DB-level
+  aggregations (disposition mix, completion rate, avg execution time, expected vs
+  actual recovery, vendor settlement, restock, recycle/scrap).
+* Observability: Actuator `returnOps` health details + `returnos.*` Micrometer
+  counters (executions, settlements, tasks). Structured logs carry return/execution/actor.
+
 ## Structure
 
 `com.returnos`: `auth` · `user` · `product` · `order` · `returns` · `policy` ·

@@ -8,6 +8,8 @@ import com.returnos.common.exception.ResourceNotFoundException;
 import com.returnos.common.security.SecurityUtils;
 import com.returnos.inspection.Inspection;
 import com.returnos.inspection.InspectionRepository;
+import com.returnos.execution.DispositionExecution;
+import com.returnos.execution.DispositionExecutionRepository;
 import com.returnos.returns.Return;
 import com.returnos.returns.ReturnReason;
 import com.returnos.returns.ReturnRepository;
@@ -29,6 +31,7 @@ public class DispositionService {
     private final ReturnRepository returns;
     private final InspectionRepository inspections;
     private final DispositionEvaluationRepository evaluations;
+    private final DispositionExecutionRepository executions;
     private final DispositionEngine engine;
     private final AuditService auditService;
     private final SecurityUtils securityUtils;
@@ -37,12 +40,14 @@ public class DispositionService {
             ReturnRepository returns,
             InspectionRepository inspections,
             DispositionEvaluationRepository evaluations,
+            DispositionExecutionRepository executions,
             DispositionEngine engine,
             AuditService auditService,
             SecurityUtils securityUtils) {
         this.returns = returns;
         this.inspections = inspections;
         this.evaluations = evaluations;
+        this.executions = executions;
         this.engine = engine;
         this.auditService = auditService;
         this.securityUtils = securityUtils;
@@ -102,6 +107,11 @@ public class DispositionService {
                 AuditAction.FINAL_DISPOSITION_RECORDED, "Return", returnId.toString(),
                 actor.getEmail(), "Final disposition recorded: " + target,
                 "final=" + target + ",overridden=" + evaluation.isOverridden());
+        // Hand the finalized disposition to operations: a PENDING execution row
+        // is created once so the execution workflow has something to start.
+        if (!executions.existsByProductReturnId(returnId)) {
+            executions.save(new DispositionExecution(evaluation.getProductReturn(), target));
+        }
         return DispositionDtos.EvaluationResponse.from(evaluation);
     }
 
