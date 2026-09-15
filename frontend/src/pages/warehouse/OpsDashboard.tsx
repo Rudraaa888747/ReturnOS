@@ -7,6 +7,7 @@ import { listAudit } from '../../services/admin'
 import { EmptyState, LinkButton, LoadError, Metric, PageHead, Panel, Skeleton } from '../../components/ui'
 import ui from '../../components/ui.module.css'
 import { ReturnBadge, TaskBadge } from '../../components/status'
+import type { ReturnOrder } from '../../lib/types'
 
 function useOpsData() {
   return useAsync(async () => {
@@ -45,7 +46,8 @@ export default function OpsDashboard() {
       {error && <LoadError error={error} onRetry={reload} />}
       {data && (
         <>
-          <div className={ui.grid3} style={{ marginBottom: 'var(--sp-4)' }}>
+          <AttentionPanel requested={data.requested.content} received={data.received.content} />
+          <div className={ui.grid3} style={{ marginBottom: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
             <Panel>
               <Metric value={String(data.requested.totalElements)} label="Awaiting approval" />
               <p className="meta">
@@ -66,34 +68,6 @@ export default function OpsDashboard() {
             </Panel>
           </div>
           <div className={ui.grid2}>
-            <Panel title="Needs you first" sub="Oldest approvals and receipts.">
-              {data.requested.content.length === 0 && data.received.content.length === 0 ? (
-                <EmptyState title="Floor is clear" body="No returns waiting for approval or inspection." />
-              ) : (
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  {[...data.requested.content, ...data.received.content].slice(0, 6).map((r) => (
-                    <li
-                      key={r.id}
-                      style={{
-                        display: 'flex',
-                        gap: 'var(--sp-3)',
-                        alignItems: 'center',
-                        padding: 'var(--sp-2) 0',
-                        borderTop: '1px solid var(--line)',
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <Link to={`/ops/returns/${r.id}`} className={`${ui.rowLink} data`}>
-                          {r.returnNumber}
-                        </Link>
-                        <div className="meta">Requested {dateOnly(r.requestedAt)}</div>
-                      </div>
-                      <ReturnBadge status={r.status} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
             <Panel title="My open tasks" sub="Assigned to you, oldest first.">
               {data.tasks.content.length === 0 ? (
                 <EmptyState title="No open tasks" body="Nothing assigned to you right now." />
@@ -138,5 +112,47 @@ export default function OpsDashboard() {
         </>
       )}
     </>
+  )
+}
+
+function AttentionPanel({ requested, received }: { requested: ReturnOrder[]; received: ReturnOrder[] }) {
+  const urgent = [...requested, ...received]
+    .sort((a, b) => a.requestedAt.localeCompare(b.requestedAt))
+    .slice(0, 6)
+  return (
+    <Panel title="Needs attention now" sub="Oldest approvals and uninspected receipts first.">
+      {urgent.length === 0 ? (
+        <p className="meta" style={{ margin: 0 }}>
+          Floor is clear — no returns waiting for approval or inspection. New work appears here first.
+        </p>
+      ) : (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {urgent.map((r) => (
+            <li
+              key={r.id}
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-3)',
+                alignItems: 'center',
+                padding: 'var(--sp-2) 0',
+                borderTop: '1px solid var(--line)',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <Link to={`/ops/returns/${r.id}`} className={`${ui.rowLink} data`}>
+                  {r.returnNumber}
+                </Link>
+                <div className="meta">
+                  {r.status === 'REQUESTED'
+                    ? `Waiting for approval · requested ${dateOnly(r.requestedAt)}`
+                    : `Received, not inspected · waiting since ${dateOnly(r.receivedAt ?? r.requestedAt)}`}
+                </div>
+              </div>
+              <ReturnBadge status={r.status} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   )
 }

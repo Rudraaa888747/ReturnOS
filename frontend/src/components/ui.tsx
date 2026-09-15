@@ -114,6 +114,27 @@ export function Panel({ title, sub, children }: { title?: string; sub?: string; 
   )
 }
 
+/** Progressive disclosure with zero JS: native details/summary, keyboard-free. */
+export function Disclosure({
+  title,
+  sub,
+  open,
+  children,
+}: {
+  title: string
+  sub?: string
+  open?: boolean
+  children: ReactNode
+}) {
+  return (
+    <details className={styles.disclosure} open={open}>
+      <summary>{title}</summary>
+      {sub && <p className={styles.disclosureSub}>{sub}</p>}
+      <div className={styles.disclosureBody}>{children}</div>
+    </details>
+  )
+}
+
 /* ---------- Badges ---------- */
 
 type Tone = 'ok' | 'warn' | 'bad' | 'info' | 'brand' | 'neutral'

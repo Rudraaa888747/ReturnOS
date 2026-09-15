@@ -8,7 +8,7 @@ const LoginPage = lazy(() => import('../pages/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/RegisterPage'))
 const ForbiddenPage = lazy(() => import('../pages/ForbiddenPage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
-const RoleHome = lazy(() => import('../pages/RoleHome'))
+const HomeRoute = lazy(() => import('../pages/home/HomeRoute'))
 const CustomerReturns = lazy(() => import('../pages/customer/CustomerReturns'))
 const CustomerReturnDetail = lazy(() => import('../pages/customer/CustomerReturnDetail'))
 const NewReturn = lazy(() => import('../pages/customer/NewReturn'))
@@ -26,10 +26,16 @@ function suspended(element: React.ReactNode) {
   return <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
 }
 
-export const router = createBrowserRouter([
+export const appRoutes = [
   { path: '/login', element: suspended(<LoginPage />) },
   { path: '/register', element: suspended(<RegisterPage />) },
   { path: '/403', element: suspended(<ForbiddenPage />) },
+  // Public homepage for visitors; role workspace for signed-in users.
+  // Deliberately OUTSIDE the authenticated Shell layout below.
+  {
+    path: '/',
+    element: suspended(<HomeRoute />),
+  },
   {
     element: (
       <RequireAuth>
@@ -37,11 +43,6 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      // Role landing: staff → /ops, admin → /admin, customers stay here.
-      {
-        path: '/',
-        element: <RequireAuth>{suspended(<RoleHome />)}</RequireAuth>,
-      },
       {
         path: '/returns',
         element: (
@@ -128,4 +129,6 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },
-])
+]
+
+export const router = createBrowserRouter(appRoutes)

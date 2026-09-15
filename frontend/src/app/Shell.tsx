@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, Package } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import styles from './Shell.module.css'
@@ -6,28 +6,39 @@ import styles from './Shell.module.css'
 interface NavItem {
   to: string
   label: string
-  end?: boolean
+  /** Exact path, or section: the path plus one id segment (never a sibling like /new). */
+  match: 'exact' | 'section'
 }
 
 function navFor(role: string | undefined): NavItem[] {
   if (role === 'ADMIN')
     return [
-      { to: '/admin', label: 'Control center', end: true },
-      { to: '/admin/tasks', label: 'Tasks' },
-      { to: '/admin/audit', label: 'Audit' },
-      { to: '/ops/returns', label: 'Returns' },
+      { to: '/admin', label: 'Control center', match: 'exact' },
+      { to: '/admin/tasks', label: 'Tasks', match: 'exact' },
+      { to: '/admin/audit', label: 'Audit', match: 'exact' },
+      { to: '/ops/returns', label: 'Returns', match: 'section' },
     ]
   if (role === 'WAREHOUSE_STAFF')
     return [
-      { to: '/ops', label: 'Operations', end: true },
-      { to: '/ops/returns', label: 'Work queue' },
-      { to: '/ops/tasks', label: 'My tasks' },
+      { to: '/ops', label: 'Operations', match: 'exact' },
+      { to: '/ops/returns', label: 'Work queue', match: 'section' },
+      { to: '/ops/tasks', label: 'My tasks', match: 'exact' },
     ]
   return [
-    { to: '/', label: 'Home', end: true },
-    { to: '/returns', label: 'My returns' },
-    { to: '/returns/new', label: 'New return' },
+    { to: '/', label: 'Home', match: 'exact' },
+    { to: '/returns', label: 'My returns', match: 'section' },
+    { to: '/returns/new', label: 'New return', match: 'exact' },
   ]
+}
+
+export function isNavActive(item: NavItem, pathname: string): boolean {
+  if (item.match === 'exact') return pathname === item.to
+  if (pathname === item.to) return true
+  // Section: exactly one more segment, and never the sibling form route (/new).
+  const rest = pathname.slice(item.to.length)
+  if (!rest.startsWith('/')) return false
+  const segment = rest.slice(1)
+  return segment.length > 0 && !segment.includes('/') && segment !== 'new'
 }
 
 function roleLabel(role: string | undefined): string {
@@ -39,11 +50,27 @@ function roleLabel(role: string | undefined): string {
 export function Shell() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const items = navFor(user?.role)
 
   const onSignOut = () => {
     signOut()
     navigate('/login', { replace: true })
   }
+
+  const links = items.map((item) => {
+    const active = isNavActive(item, pathname)
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        aria-current={active ? 'page' : undefined}
+        className={active ? `${styles.link} ${styles.active}` : styles.link}
+      >
+        {item.label}
+      </Link>
+    )
+  })
 
   return (
     <div className={styles.shell}>
@@ -60,17 +87,8 @@ export function Shell() {
             <small>Reverse logistics</small>
           </span>
         </div>
-        <nav className={styles.nav}>
-          {navFor(user?.role).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => (isActive ? `${styles.link} ${styles.active}` : styles.link)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+        <nav className={styles.nav} aria-label="Primary">
+          {links}
         </nav>
         <div className={styles.sideFoot}>
           <div className={styles.who}>
@@ -90,16 +108,7 @@ export function Shell() {
             <Package size={16} /> ReturnOS
           </span>
           <nav className={styles.topnav} aria-label="Primary">
-            {navFor(user?.role).map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) => (isActive ? `${styles.link} ${styles.active}` : styles.link)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            {links}
           </nav>
           <button type="button" className={styles.signOut} onClick={onSignOut}>
             <LogOut size={15} aria-hidden="true" /> Sign out

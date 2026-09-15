@@ -30,26 +30,26 @@
   --sp-10: 2.5rem;
   --sp-12: 3rem;
 
-  /* Surfaces */
-  --paper: #f4f5f1;
+  /* Surfaces: warm off-white paper, white work surfaces */
+  --paper: #f6f6f3;
   --surface: #ffffff;
   --surface-sunken: #eceee8;
   --surface-overlay: #ffffff;
 
-  /* Ink */
-  --ink: #14181d;
-  --ink-2: #3c434d;
-  --ink-3: #5b6470;
-  --ink-faint: #8a93a0;
+  /* Ink: graphite hierarchy */
+  --ink: #16191f;
+  --ink-2: #3d434d;
+  --ink-3: #616a76;
+  --ink-faint: #8b93a1;
 
-  /* Lines */
-  --line: #e1e4e8;
-  --line-strong: #c9ced5;
+  /* Lines: cool gray */
+  --line: #e0e3e8;
+  --line-strong: #c6ccd4;
 
-  /* Brand: harbour teal */
-  --brand: #0b5f55;
-  --brand-strong: #08473f;
-  --brand-soft: #e2efec;
+  /* Brand: deep maritime blue. Green is reserved for success states only. */
+  --brand: #1d4ed8;
+  --brand-strong: #1e3a8a;
+  --brand-soft: #e5edfb;
   --brand-ink: #ffffff;
 
   /* Semantic */
@@ -59,8 +59,8 @@
   --warn-soft: #f7ecd4;
   --bad: #b3372f;
   --bad-soft: #f7e3e1;
-  --info: #2f5d8a;
-  --info-soft: #e2ebf4;
+  --info: #1d4ed8;
+  --info-soft: #e5edfb;
 
   /* Risk (always paired with label + icon) */
   --risk-low: #3e7c4f;
@@ -70,14 +70,14 @@
   --risk-high: #b3372f;
   --risk-high-soft: #f7e3e1;
 
-  /* Disposition markers (muted, text-led) */
-  --disp-restock: #3e7c4f;
-  --disp-refurbish: #0b5f55;
+  /* Disposition markers (muted, text-led; green reserved for success only) */
+  --disp-restock: #2563a8;
+  --disp-refurbish: #4c5b9e;
   --disp-resell: #2f5d8a;
   --disp-vendor: #8a6d1f;
   --disp-liquidate: #b7791f;
-  --disp-recycle: #5f7a5f;
-  --disp-scrap: #6b7280;
+  --disp-recycle: #64748b;
+  --disp-scrap: #3f454d;
 
   /* Shape */
   --radius-sm: 4px;

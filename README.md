@@ -139,9 +139,15 @@ via `CORS_ALLOWED_ORIGINS` (default `http://localhost:5173`, see `.env.example`)
 Demo logins: customer@returnos.dev / staff@returnos.dev / admin@returnos.dev
 (passwords in Quick start). JWT lives in `sessionStorage`; no refresh tokens.
 
-Role homes: `/` customer dashboard · `/ops` warehouse · `/admin` control center.
+Role homes: customer dashboard · `/ops` warehouse · `/admin` control center.
+`/` is the public homepage for visitors; signed-in users land on their role
+workspace instead. Role entry cards deep-link (`/returns`, `/ops`, `/admin`)
+with auth bounce-back after login.
 Full customer journey (request → approve → receive → inspect → risk →
 disposition → finalize → execute → settle) is clickable end-to-end in the UI.
+
+Design language: navy/blue brand (green reserved for success), Inter + IBM Plex
+Mono, token-driven CSS in `frontend/src/styles/tokens.css`.
 
 ## Structure
 

@@ -17,12 +17,12 @@ import type {
   VendorClaimStatus,
 } from './types'
 
-const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' })
-const num = new Intl.NumberFormat('en-GB')
+const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' })
+const num = new Intl.NumberFormat('en-IN')
 
 export function money(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
-  return gbp.format(value)
+  return inr.format(value)
 }
 
 export function count(value: number | null | undefined): string {

@@ -10,6 +10,7 @@ logs/
 
 demo.log
 demo-err.log
+*.pid
 
 backend.pid
 frontend/vite.pid

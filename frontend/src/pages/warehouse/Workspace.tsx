@@ -62,6 +62,7 @@ import type {
 import {
   Badge,
   Button,
+  Disclosure,
   Field,
   InlineSpinner,
   LoadError,
@@ -1228,8 +1229,13 @@ function TasksSection({ returnId, tasks, run }: { returnId: string; tasks: OpsTa
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
 
+  const actionable = tasks.some((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS')
   return (
-    <Panel title="Operational tasks" sub={`${tasks.length} task${tasks.length === 1 ? '' : 's'} on this return.`}>
+    <Disclosure
+      title={`Operational tasks (${tasks.length})`}
+      sub="Work items bound to this return."
+      open={actionable}
+    >
       <form
         style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 'var(--sp-3)' }}
         onSubmit={(e) => {
@@ -1275,7 +1281,7 @@ function TasksSection({ returnId, tasks, run }: { returnId: string; tasks: OpsTa
           ))}
         </ul>
       )}
-    </Panel>
+    </Disclosure>
   )
 }
 
@@ -1314,28 +1320,28 @@ function TaskRow({ task, run }: { task: OpsTask; run: Runner }) {
 
 function HistoryPanel({ data }: { data: WorkspaceData }) {
   const { history } = data
-  if (history.events.length === 0) {
-    return (
-      <Panel title="History">
-        <p className="meta">No events recorded yet.</p>
-      </Panel>
-    )
-  }
   return (
-    <Panel title="History" sub={`${history.events.length} events, oldest first.`}>
-      <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {history.events.map((e, i) => (
-          <li
-            key={`${e.action}-${e.timestamp}-${i}`}
-            style={{ padding: 'var(--sp-2) 0', borderTop: i === 0 ? 0 : '1px solid var(--line)', fontSize: 'var(--fs-body)' }}
-          >
-            <strong>{e.action.replace(/_/g, ' ').toLowerCase()}</strong>{' '}
-            <span className="meta data">{dateTime(e.timestamp)}</span>
-            {e.actor && <span className="meta"> · {e.actor}</span>}
-            {e.reason && <div className="meta">{e.reason}</div>}
-          </li>
-        ))}
-      </ol>
-    </Panel>
+    <Disclosure
+      title={`History (${history.events.length})`}
+      sub="Full audit trail for this return, oldest first."
+    >
+      {history.events.length === 0 ? (
+        <p className="meta">No events recorded yet.</p>
+      ) : (
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {history.events.map((e, i) => (
+            <li
+              key={`${e.action}-${e.timestamp}-${i}`}
+              style={{ padding: 'var(--sp-2) 0', borderTop: i === 0 ? 0 : '1px solid var(--line)', fontSize: 'var(--fs-body)' }}
+            >
+              <strong>{e.action.replace(/_/g, ' ').toLowerCase()}</strong>{' '}
+              <span className="meta data">{dateTime(e.timestamp)}</span>
+              {e.actor && <span className="meta"> · {e.actor}</span>}
+              {e.reason && <div className="meta">{e.reason}</div>}
+            </li>
+          ))}
+        </ol>
+      )}
+    </Disclosure>
   )
 }

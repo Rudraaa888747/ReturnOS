@@ -64,24 +64,10 @@ export default function CustomerDashboard() {
       {error && <LoadError error={error} onRetry={reload} />}
       {data && (
         <>
-          <div className={ui.grid3} style={{ marginBottom: 'var(--sp-4)' }}>
-            <Panel>
-              <Metric value={String(data.content.filter((r) => ACTIVE.includes(r.status)).length)} label="Active returns" />
-            </Panel>
-            <Panel>
-              <Metric value={String(data.totalElements)} label="Total returns" />
-            </Panel>
-            <Panel>
-              <Metric
-                value={String(data.content.filter((r) => r.status === 'INSPECTION_COMPLETED').length)}
-                label="Awaiting outcome"
-              />
-            </Panel>
-          </div>
           {data.content.length === 0 ? (
             <EmptyState
               title="No returns yet"
-              body="When something you ordered needs to go back, start a return and follow it here."
+              body="Your return history will appear here once you create your first return. Delivered orders become eligible automatically."
               action={
                 <LinkButton to="/returns/new" variant="primary">
                   Start a return
@@ -89,6 +75,9 @@ export default function CustomerDashboard() {
               }
             />
           ) : (
+            <AttentionPanel returns={data.content} />
+          )}
+          {data.content.length > 0 && (
             <Panel title="Recent returns" sub="Newest first. Open one for the full journey.">
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 {data.content.slice(0, 6).map((r) => (
@@ -124,8 +113,74 @@ export default function CustomerDashboard() {
               </p>
             </Panel>
           )}
+          <div className={ui.grid3} style={{ marginTop: 'var(--sp-4)' }}>
+            <Panel>
+              <Metric value={String(data.content.filter((r) => ACTIVE.includes(r.status)).length)} label="Active returns" />
+            </Panel>
+            <Panel>
+              <Metric value={String(data.totalElements)} label="Total returns" />
+            </Panel>
+            <Panel>
+              <Metric
+                value={String(data.content.filter((r) => r.status === 'INSPECTION_COMPLETED').length)}
+                label="Awaiting outcome"
+              />
+            </Panel>
+          </div>
         </>
       )}
     </>
+  )
+}
+
+function AttentionPanel({ returns }: { returns: ReturnOrder[] }) {
+  const actionable = returns.filter((r) => r.status === 'APPROVED' || r.status === 'REJECTED')
+  if (actionable.length === 0) {
+    const active = returns.filter((r) => ACTIVE.includes(r.status))
+    return (
+      <Panel title="Needs your attention">
+        {active.length === 0 ? (
+          <p className="meta">Nothing needs you right now. Your returns are moving on their own.</p>
+        ) : (
+          <p className="meta">
+            Nothing needs you right now. {active.length} return{active.length === 1 ? ' is' : 's are'} with the
+            warehouse — follow along below.
+          </p>
+        )}
+      </Panel>
+    )
+  }
+  return (
+    <Panel title="Needs your attention">
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {actionable.map((r) => (
+          <li
+            key={r.id}
+            style={{
+              display: 'flex',
+              gap: 'var(--sp-3)',
+              alignItems: 'center',
+              padding: 'var(--sp-3) 0',
+              borderTop: '1px solid var(--line)',
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Link to={`/returns/${r.id}`} className="rowLink data">
+                {r.returnNumber}
+              </Link>
+              <div className="meta">
+                {r.status === 'APPROVED'
+                  ? 'Approved — ship your item so the warehouse can receive it.'
+                  : `Not approved — ${r.rejectionReason ?? 'see details for the reason.'}`}
+              </div>
+            </div>
+            <ReturnBadge status={r.status} />
+            <span className="meta" aria-hidden="true">
+              <ArrowRight size={15} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   )
 }

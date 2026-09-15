@@ -18,7 +18,6 @@ import {
   SelectInput,
   Skeleton,
   TextArea,
-  TextInput,
 } from '../../components/ui'
 import ui from '../../components/ui.module.css'
 import { useToast } from '../../components/feedback'
@@ -162,7 +161,8 @@ export default function NewReturn() {
                     display: 'flex',
                     gap: 'var(--sp-3)',
                     alignItems: 'flex-start',
-                    border: '1px solid var(--line)',
+                    border: orderId === o.id ? '1px solid var(--brand)' : '1px solid var(--line)',
+                    borderLeftWidth: orderId === o.id ? 3 : 1,
                     borderRadius: 'var(--radius-md)',
                     padding: 'var(--sp-3) var(--sp-4)',
                     cursor: 'pointer',
@@ -203,19 +203,30 @@ export default function NewReturn() {
         <Panel title={`What is going back from ${order.orderNumber}?`}>
           {order.items.map((item) => {
             const pick = picks.find((p) => p.orderItemId === item.id)
+            const selected = Boolean(pick)
             return (
-              <div key={item.id} style={{ borderBottom: '1px solid var(--line)', padding: 'var(--sp-3) 0' }}>
-                <label className={ui.checkRow} style={{ marginBottom: 'var(--sp-2)' }}>
+              <div
+                key={item.id}
+                style={{
+                  border: selected ? '1px solid var(--brand)' : '1px solid var(--line)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 'var(--sp-3) var(--sp-4)',
+                  marginBottom: 'var(--sp-3)',
+                  background: selected ? '#fbfdff' : 'var(--surface)',
+                }}
+              >
+                <label className={ui.checkRow} style={{ marginBottom: selected ? 'var(--sp-2)' : 0 }}>
                   <input
                     type="checkbox"
-                    checked={Boolean(pick)}
+                    checked={selected}
                     onChange={() => toggleItem(item.id)}
+                    aria-describedby={`item-${item.id}-meta`}
                   />
                   <span>
                     <strong>
                       {item.quantity} × {item.productName}
                     </strong>{' '}
-                    <span className="meta data">
+                    <span className="meta data" id={`item-${item.id}-meta`}>
                       {item.sku} · {money(item.unitPrice)} each
                     </span>
                   </span>
@@ -223,18 +234,40 @@ export default function NewReturn() {
                 {pick && (
                   <div className={ui.grid2}>
                     <Field label="Quantity to return" htmlFor={`qty-${item.id}`}>
-                      <TextInput
-                        id={`qty-${item.id}`}
-                        type="number"
-                        min={1}
-                        max={item.quantity}
-                        value={pick.quantity}
-                        onChange={(e) =>
-                          updatePick(item.id, {
-                            quantity: Math.max(1, Math.min(item.quantity, Number(e.target.value) || 1)),
-                          })
-                        }
-                      />
+                      <span style={{ display: 'inline-flex', alignItems: 'stretch', gap: 0 }}>
+                        <Button
+                          size="sm"
+                          aria-label={`Return one fewer of ${item.productName}`}
+                          disabled={pick.quantity <= 1}
+                          onClick={() => updatePick(item.id, { quantity: pick.quantity - 1 })}
+                        >
+                          −
+                        </Button>
+                        <span
+                          id={`qty-${item.id}`}
+                          role="status"
+                          aria-label={`Quantity to return: ${pick.quantity} of ${item.quantity}`}
+                          className="data"
+                          style={{
+                            minWidth: 64,
+                            textAlign: 'center',
+                            alignContent: 'center',
+                            borderTop: '1px solid var(--line-strong)',
+                            borderBottom: '1px solid var(--line-strong)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {pick.quantity} / {item.quantity}
+                        </span>
+                        <Button
+                          size="sm"
+                          aria-label={`Return one more of ${item.productName}`}
+                          disabled={pick.quantity >= item.quantity}
+                          onClick={() => updatePick(item.id, { quantity: pick.quantity + 1 })}
+                        >
+                          +
+                        </Button>
+                      </span>
                     </Field>
                     <Field label="Reason" htmlFor={`reason-${item.id}`}>
                       <SelectInput
@@ -284,14 +317,29 @@ export default function NewReturn() {
                   <dt>
                     {p.quantity} × {item.productName}
                   </dt>
-                    <dd>
-                      {p.reason ? returnReasonLabel[p.reason as ReturnReason] : '—'}
-                    {p.description && <span className="meta"> — {p.description}</span>}
+                  <dd>
+                    {p.reason ? returnReasonLabel[p.reason as ReturnReason] : '—'}
+                    {p.description && <span className="meta"> — {p.description}</span>}{' '}
+                    <Button size="sm" onClick={() => setStep(1)}>
+                      Edit items
+                    </Button>
                   </dd>
                 </div>
               )
             })}
           </dl>
+          <p style={{ marginTop: 'var(--sp-3)' }}>
+            <Button
+              size="sm"
+              onClick={() => {
+                setOrderId('')
+                setPicks([])
+                setStep(0)
+              }}
+            >
+              Change order
+            </Button>
+          </p>
           <FormError message={formError} />
           <div style={{ marginTop: 'var(--sp-5)', display: 'flex', justifyContent: 'space-between' }}>
             <Button onClick={() => setStep(1)} disabled={busy}>
