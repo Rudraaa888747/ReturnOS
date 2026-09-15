@@ -440,6 +440,16 @@
   margin: calc(-1 * var(--sp-2)) 0 var(--sp-3);
 }
 
+/* Attention body: one shared floor so empty states and single rows occupy
+   the same minimum footprint (one normal attention row ≈ 4.25rem).
+   Taller content grows naturally; never set per-page heights. */
+.attentionBody {
+  min-height: 4.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 /* Toolbar: filters row */
 .toolbar {
   display: flex;

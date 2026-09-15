@@ -16,7 +16,7 @@ import {
   Skeleton,
 } from '../../components/ui'
 import ui from '../../components/ui.module.css'
-import { useToast } from '../../components/feedback'
+import { ConfirmDialog, useToast } from '../../components/feedback'
 import { PriorityBadge, TaskBadge } from '../../components/status'
 import { taskTypeLabel } from '../../lib/format'
 
@@ -30,13 +30,23 @@ export default function WarehouseTasks() {
     [mine, status, page],
   )
 
-  const advance = async (taskId: string, action: 'start' | 'complete') => {
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<string | null>(null)
+
+  const advance = async (taskId: string, action: 'start' | 'complete' | 'cancel') => {
+    if (busyId !== null) return
+    setBusyId(taskId)
     try {
       await taskAction(taskId, action)
-      notify(action === 'start' ? 'Task started.' : 'Task completed. Well done.')
+      notify(
+        action === 'start' ? 'Task started.' : action === 'complete' ? 'Task completed. Well done.' : 'Task cancelled.',
+      )
       reload()
     } catch (err) {
       notify(errorMessage(err), 'error')
+    } finally {
+      setBusyId(null)
+      setConfirming(null)
     }
   }
 
@@ -121,16 +131,33 @@ export default function WarehouseTasks() {
                       <TaskBadge status={t.status} />
                     </td>
                     <td data-th="Action">
-                      {t.status === 'OPEN' && (
-                        <Button size="sm" variant="primary" onClick={() => advance(t.id, 'start')}>
-                          Start
-                        </Button>
-                      )}
-                      {t.status === 'IN_PROGRESS' && (
-                        <Button size="sm" variant="primary" onClick={() => advance(t.id, 'complete')}>
-                          Complete
-                        </Button>
-                      )}
+                      <span style={{ display: 'inline-flex', gap: 'var(--sp-1)', flexWrap: 'wrap' }}>
+                        {t.status === 'OPEN' && (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            disabled={busyId !== null}
+                            onClick={() => advance(t.id, 'start')}
+                          >
+                            Start
+                          </Button>
+                        )}
+                        {t.status === 'IN_PROGRESS' && (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            disabled={busyId !== null}
+                            onClick={() => advance(t.id, 'complete')}
+                          >
+                            Complete
+                          </Button>
+                        )}
+                        {(t.status === 'OPEN' || t.status === 'IN_PROGRESS') && (
+                          <Button size="sm" disabled={busyId !== null} onClick={() => setConfirming(t.id)}>
+                            Cancel
+                          </Button>
+                        )}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -146,6 +173,18 @@ export default function WarehouseTasks() {
           />
         </>
       )}
+      <ConfirmDialog
+        open={confirming !== null}
+        title="Cancel this task?"
+        body="The task leaves the queue as cancelled. This changes its state and cannot be undone."
+        confirmLabel="Cancel task"
+        danger
+        busy={busyId !== null}
+        onClose={() => setConfirming(null)}
+        onConfirm={() => {
+          if (confirming !== null) void advance(confirming, 'cancel')
+        }}
+      />
     </>
   )
 }

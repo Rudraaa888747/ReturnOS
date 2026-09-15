@@ -135,52 +135,48 @@ export default function CustomerDashboard() {
 
 function AttentionPanel({ returns }: { returns: ReturnOrder[] }) {
   const actionable = returns.filter((r) => r.status === 'APPROVED' || r.status === 'REJECTED')
-  if (actionable.length === 0) {
-    const active = returns.filter((r) => ACTIVE.includes(r.status))
-    return (
-      <Panel title="Needs your attention">
-        {active.length === 0 ? (
-          <p className="meta">Nothing needs you right now. Your returns are moving on their own.</p>
-        ) : (
-          <p className="meta">
-            Nothing needs you right now. {active.length} return{active.length === 1 ? ' is' : 's are'} with the
-            warehouse — follow along below.
-          </p>
-        )}
-      </Panel>
-    )
-  }
+  const active = returns.filter((r) => ACTIVE.includes(r.status))
   return (
     <Panel title="Needs your attention">
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {actionable.map((r) => (
-          <li
-            key={r.id}
-            style={{
-              display: 'flex',
-              gap: 'var(--sp-3)',
-              alignItems: 'center',
-              padding: 'var(--sp-3) 0',
-              borderTop: '1px solid var(--line)',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Link to={`/returns/${r.id}`} className="rowLink data">
-                {r.returnNumber}
-              </Link>
-              <div className="meta">
-                {r.status === 'APPROVED'
-                  ? 'Approved — ship your item so the warehouse can receive it.'
-                  : `Not approved — ${r.rejectionReason ?? 'see details for the reason.'}`}
-              </div>
-            </div>
-            <ReturnBadge status={r.status} />
-            <span className="meta" aria-hidden="true">
-              <ArrowRight size={15} />
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className={ui.attentionBody} data-testid="attention-body">
+        {actionable.length === 0 ? (
+          <p className="meta" style={{ margin: 0 }}>
+            {active.length === 0
+              ? 'Nothing needs you right now. Your returns are moving on their own.'
+              : `Nothing needs you right now. ${active.length} return${active.length === 1 ? ' is' : 's are'} with the warehouse — follow along below.`}
+          </p>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {actionable.map((r) => (
+              <li
+                key={r.id}
+                style={{
+                  display: 'flex',
+                  gap: 'var(--sp-3)',
+                  alignItems: 'center',
+                  padding: 'var(--sp-3) 0',
+                  borderTop: '1px solid var(--line)',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Link to={`/returns/${r.id}`} className="rowLink data">
+                    {r.returnNumber}
+                  </Link>
+                  <div className="meta">
+                    {r.status === 'APPROVED'
+                      ? 'Approved — ship your item so the warehouse can receive it.'
+                      : `Not approved — ${r.rejectionReason ?? 'see details for the reason.'}`}
+                  </div>
+                </div>
+                <ReturnBadge status={r.status} />
+                <span className="meta" aria-hidden="true">
+                  <ArrowRight size={15} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </Panel>
   )
 }

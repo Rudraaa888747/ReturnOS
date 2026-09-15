@@ -168,6 +168,10 @@ export function completeTask(taskId: string) {
   return taskAction(taskId, 'complete')
 }
 
+export function cancelTask(taskId: string) {
+  return taskAction(taskId, 'cancel')
+}
+
 export function assignTask(taskId: string, userId: string) {
   return request<OpsTask>(`/api/v1/operations/tasks/${taskId}/assign`, {
     method: 'POST',

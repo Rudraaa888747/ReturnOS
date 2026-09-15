@@ -58,6 +58,49 @@ describe('LoginPage', () => {
     expect(signIn).not.toHaveBeenCalled()
   })
 
+  it('falls back to the role root when the remembered path is stale', async () => {
+    const user = userEvent.setup()
+    const signIn = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useAuth).mockReturnValue({ user: null, ready: true, signIn, signUp: vi.fn(), signOut: vi.fn() })
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: '/old-dashboard' } }]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<p>home route</p>} />
+          <Route path="/old-dashboard" element={<p>stale page</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await user.type(screen.getByLabelText('Work email'), 'a@b.dev')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByText('home route')).toBeInTheDocument()
+    expect(screen.queryByText('stale page')).not.toBeInTheDocument()
+  })
+
+  it('preserves a valid remembered path after login', async () => {
+    const user = userEvent.setup()
+    const signIn = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useAuth).mockReturnValue({ user: null, ready: true, signIn, signUp: vi.fn(), signOut: vi.fn() })
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: '/ops/returns' } }]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<p>home route</p>} />
+          <Route path="/ops/returns" element={<p>work queue</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await user.type(screen.getByLabelText('Work email'), 's@x.dev')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByText('work queue')).toBeInTheDocument()
+  })
+
   it('shows backend failures in plain words', async () => {
     const user = userEvent.setup()
     const signIn = vi.fn().mockRejectedValue(new Error('Email or password did not match. Try again.'))

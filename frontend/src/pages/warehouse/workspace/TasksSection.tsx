@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { completeTask, createTask, startTask } from '../../../services/operations';
+import { cancelTask, completeTask, createTask, startTask } from '../../../services/operations';
 import { Button, Disclosure, Field, SelectInput, TextInput } from '../../../components/ui';
+import { ConfirmDialog } from '../../../components/feedback';
 import { TaskBadge } from '../../../components/status';
 import type { OpsTask } from '../../../lib/types';
 import type { Runner } from './types';
@@ -66,7 +67,10 @@ export function TasksSection({ returnId, tasks, run }: { returnId: string; tasks
   )
 }
 
-function TaskRow({ task, run }: { task: OpsTask; run: Runner }) {
+export function TaskRow({ task, run }: { task: OpsTask; run: Runner }) {
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const actionable = task.status === 'OPEN' || task.status === 'IN_PROGRESS'
   return (
     <li
       style={{
@@ -84,15 +88,45 @@ function TaskRow({ task, run }: { task: OpsTask; run: Runner }) {
       </span>
       <TaskBadge status={task.status} />
       {task.status === 'OPEN' && (
-        <Button size="sm" onClick={() => void run(() => startTask(task.id), 'Task started.')}>
+        <Button size="sm" disabled={busy} onClick={() => void run(() => startTask(task.id), 'Task started.')}>
           Start
         </Button>
       )}
       {task.status === 'IN_PROGRESS' && (
-        <Button size="sm" variant="primary" onClick={() => void run(() => completeTask(task.id), 'Task completed.')}>
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={busy}
+          onClick={() => void run(() => completeTask(task.id), 'Task completed.')}
+        >
           Complete
         </Button>
       )}
+      {actionable && (
+        <Button size="sm" disabled={busy} onClick={() => setConfirming(true)}>
+          Cancel
+        </Button>
+      )}
+      <ConfirmDialog
+        open={confirming}
+        title="Cancel this task?"
+        body="The task leaves the queue as cancelled. This changes its state and cannot be undone."
+        confirmLabel="Cancel task"
+        danger
+        busy={busy}
+        onClose={() => setConfirming(false)}
+        onConfirm={() => {
+          setBusy(true)
+          void (async () => {
+            try {
+              await run(() => cancelTask(task.id), 'Task cancelled.')
+            } finally {
+              setBusy(false)
+              setConfirming(false)
+            }
+          })()
+        }}
+      />
     </li>
   )
 }

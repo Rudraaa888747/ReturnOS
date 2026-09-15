@@ -121,6 +121,7 @@ function AttentionPanel({ requested, received }: { requested: ReturnOrder[]; rec
     .slice(0, 6)
   return (
     <Panel title="Needs attention now" sub="Oldest approvals and uninspected receipts first.">
+      <div className={ui.attentionBody} data-testid="attention-body">
       {urgent.length === 0 ? (
         <p className="meta" style={{ margin: 0 }}>
           Floor is clear — no returns waiting for approval or inspection. New work appears here first.
@@ -162,6 +163,7 @@ function AttentionPanel({ requested, received }: { requested: ReturnOrder[]; rec
           ))}
         </ul>
       )}
+      </div>
     </Panel>
   )
 }

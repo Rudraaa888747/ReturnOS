@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Package } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { errorMessage } from '../lib/api'
+import { resolvePostLoginPath } from '../lib/routes'
 import { Button, Field, FormError, InlineSpinner, TextInput } from '../components/ui'
 import styles from './Auth.module.css'
 
@@ -27,7 +28,9 @@ export default function LoginPage() {
     setBusy(true)
     try {
       await signIn(email.trim(), password)
-      navigate(location.state?.from ?? '/', { replace: true })
+      // A stale or forged "from" path must never land a fresh session on 404:
+      // unknown targets fall back to the role-aware root.
+      navigate(resolvePostLoginPath(location.state?.from), { replace: true })
     } catch (err) {
       setError(errorMessage(err))
     } finally {
