@@ -24,3 +24,7 @@ export function listOrders(page = 0, size = 20) {
 export function getOrder(id: string) {
   return request<Order>(`/api/v1/orders/${id}`)
 }
+
+export function markDelivered(orderId: string) {
+  return request<Order>(`/api/v1/orders/${orderId}/deliver`, { method: 'POST' })
+}

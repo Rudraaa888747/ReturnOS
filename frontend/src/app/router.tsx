@@ -12,6 +12,7 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 const HomeRoute = lazy(() => import('../pages/home/HomeRoute'))
 const RoleHome = lazy(() => import('../pages/RoleHome'))
 const CustomerReturns = lazy(() => import('../pages/customer/CustomerReturns'))
+const NewOrder = lazy(() => import('../pages/customer/NewOrder'))
 const CustomerReturnDetail = lazy(() => import('../pages/customer/CustomerReturnDetail'))
 const NewReturn = lazy(() => import('../pages/customer/NewReturn'))
 
@@ -19,6 +20,7 @@ const OpsDashboard = lazy(() => import('../pages/warehouse/OpsDashboard'))
 const WorkQueue = lazy(() => import('../pages/warehouse/WorkQueue'))
 const Workspace = lazy(() => import('../pages/warehouse/Workspace'))
 const WarehouseTasks = lazy(() => import('../pages/warehouse/WarehouseTasks'))
+const OrdersList = lazy(() => import('../pages/warehouse/OrdersList'))
 
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'))
 const AdminTasks = lazy(() => import('../pages/admin/AdminTasks'))
@@ -68,6 +70,14 @@ export const appRoutes = [
         ),
       },
       {
+        path: '/orders/new',
+        element: (
+          <RequireAuth roles={['CUSTOMER']}>
+            {suspended(<NewOrder />)}
+          </RequireAuth>
+        ),
+      },
+      {
         path: '/returns/:id',
         element: (
           <RequireAuth roles={['CUSTOMER']}>
@@ -105,6 +115,14 @@ export const appRoutes = [
         element: (
           <RequireAuth roles={['WAREHOUSE_STAFF']}>
             {suspended(<WarehouseTasks />)}
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/ops/orders',
+        element: (
+          <RequireAuth roles={['WAREHOUSE_STAFF', 'ADMIN']}>
+            {suspended(<OrdersList />)}
           </RequireAuth>
         ),
       },

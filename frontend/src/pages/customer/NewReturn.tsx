@@ -13,6 +13,7 @@ import {
   Field,
   FormError,
   InlineSpinner,
+  LinkButton,
   LoadError,
   PageHead,
   Panel,
@@ -234,6 +235,11 @@ export default function NewReturn() {
             <EmptyState
               title="No delivered orders"
               body="Only delivered orders can be returned. Orders still on their way will appear here once delivered."
+              action={
+                <LinkButton to="/orders/new" variant="primary">
+                  Place a new order
+                </LinkButton>
+              }
             />
           ) : (
             <div role="radiogroup" aria-label="Delivered orders" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -296,7 +302,11 @@ export default function NewReturn() {
               </p>
             )
           )}
-          <div style={{ marginTop: 'var(--sp-5)', display: 'flex', justifyContent: 'flex-end' }}>
+          <p className="meta" style={{ marginTop: 'var(--sp-4)' }}>
+            Don&apos;t see your order? Only delivered orders qualify — a newly placed order becomes eligible after
+            delivery. <Link to="/orders/new">Place a new order</Link>
+          </p>
+          <div style={{ marginTop: 'var(--sp-3)', display: 'flex', justifyContent: 'flex-end' }}>
             <Button variant="primary" disabled={!order} onClick={() => setStep(1)}>
               Continue to items
             </Button>

@@ -17,17 +17,20 @@ function navFor(role: string | undefined): NavItem[] {
       { to: '/admin/tasks', label: 'Tasks', match: 'exact' },
       { to: '/admin/audit', label: 'Audit', match: 'exact' },
       { to: '/ops/returns', label: 'Returns', match: 'section' },
+      { to: '/ops/orders', label: 'Orders', match: 'exact' },
     ]
   if (role === 'WAREHOUSE_STAFF')
     return [
       { to: '/ops', label: 'Operations', match: 'exact' },
       { to: '/ops/returns', label: 'Work queue', match: 'section' },
+      { to: '/ops/orders', label: 'Orders', match: 'exact' },
       { to: '/ops/tasks', label: 'My tasks', match: 'exact' },
     ]
   return [
     { to: '/home', label: 'Home', match: 'exact' },
     { to: '/returns', label: 'My returns', match: 'section' },
     { to: '/returns/new', label: 'New return', match: 'exact' },
+    { to: '/orders/new', label: 'Place an order', match: 'exact' },
   ]
 }
 
