@@ -149,6 +149,15 @@ function AttentionPanel({ requested, received }: { requested: ReturnOrder[]; rec
                 </div>
               </div>
               <ReturnBadge status={r.status} />
+              {r.status === 'REQUESTED' ? (
+                <Link to={`/ops/returns/${r.id}`} className={`${ui.btn} ${ui.btnPrimary} ${ui.btnSm}`}>
+                  Review
+                </Link>
+              ) : (
+                <Link to={`/ops/returns/${r.id}`} className={`${ui.btn} ${ui.btnSecondary} ${ui.btnSm}`}>
+                  Open
+                </Link>
+              )}
             </li>
           ))}
         </ul>

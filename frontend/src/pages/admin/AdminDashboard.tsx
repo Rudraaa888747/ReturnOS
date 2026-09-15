@@ -47,7 +47,10 @@ export default function AdminDashboard() {
       )}
       {returns.data && recovery.data && (
         <>
-          <div className={ui.grid3} style={{ marginBottom: 'var(--sp-4)' }}>
+          <p className="eyebrow" style={{ marginBottom: 'var(--sp-3)' }}>
+            Operational health
+          </p>
+          <div className={ui.grid3} style={{ marginBottom: 'var(--sp-6)' }}>
             <Panel>
               <Metric value={count(returns.data.totalReturns)} label="Total returns" />
               <p className="meta">
@@ -67,6 +70,9 @@ export default function AdminDashboard() {
             </Panel>
           </div>
 
+          <p className="eyebrow" style={{ marginBottom: 'var(--sp-3)' }}>
+            Volume &amp; recovery
+          </p>
           <div className={ui.grid2}>
             <Panel title="Disposition mix" sub="Finalized returns by channel.">
               {Object.keys(returns.data.byFinalDisposition).length === 0 ? (
@@ -101,6 +107,9 @@ export default function AdminDashboard() {
             </Panel>
           </div>
 
+          <p className="eyebrow" style={{ marginBottom: 'var(--sp-3)', marginTop: 'var(--sp-6)' }}>
+            Channels
+          </p>
           <div className={ui.grid2}>
             <Panel title="Vendor claims" sub="Settlement discipline with vendors.">
               <Bars

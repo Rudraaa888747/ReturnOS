@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
 import { useAsync } from '../../hooks/useAsync'
 import { dateOnly, money, returnReasonLabel } from '../../lib/format'
 import { errorMessage } from '../../lib/api'
@@ -45,21 +46,53 @@ const STEPS = ['Choose order', 'Items & reasons', 'Review & submit']
 export default function NewReturn() {
   const navigate = useNavigate()
   const notify = useToast()
+  const { user } = useAuth()
+  const isStaff = user?.role !== 'CUSTOMER'
   const [step, setStep] = useState(0)
   const [orderId, setOrderId] = useState('')
   const [picks, setPicks] = useState<Pick[]>([])
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const submitting = useRef(false)
 
   const orders = useAsync((_signal) => listOrders(0, 20).then((p) => p))
+  const [extraOrders, setExtraOrders] = useState<Order[]>([])
+  const [nextPage, setNextPage] = useState(1)
+  const [moreBusy, setMoreBusy] = useState(false)
+  const [moreError, setMoreError] = useState<string | null>(null)
+  const totalPages = orders.data?.totalPages ?? 1
+  const totalElements = orders.data?.totalElements ?? 0
+  const allOrders = useMemo(() => {
+    const seen = new Set<string>()
+    const merged: Order[] = []
+    for (const o of [...(orders.data?.content ?? []), ...extraOrders]) {
+      if (!seen.has(o.id)) {
+        seen.add(o.id)
+        merged.push(o)
+      }
+    }
+    return merged
+  }, [orders.data, extraOrders])
   const order: Order | undefined = useMemo(
-    () => orders.data?.content.find((o) => o.id === orderId),
-    [orders.data, orderId],
+    () => allOrders.find((o) => o.id === orderId),
+    [allOrders, orderId],
   )
-  const deliverable = useMemo(
-    () => orders.data?.content.filter((o) => o.status === 'DELIVERED') ?? [],
-    [orders.data],
-  )
+  const deliverable = useMemo(() => allOrders.filter((o) => o.status === 'DELIVERED'), [allOrders])
+  const hasMore = nextPage < totalPages
+
+  const loadMore = async () => {
+    setMoreBusy(true)
+    setMoreError(null)
+    try {
+      const page = await listOrders(nextPage, 20)
+      setExtraOrders((prev) => [...prev, ...page.content])
+      setNextPage((n) => n + 1)
+    } catch (err) {
+      setMoreError(errorMessage(err))
+    } finally {
+      setMoreBusy(false)
+    }
+  }
 
   const toggleItem = (orderItemId: string) => {
     setPicks((prev) =>
@@ -75,11 +108,21 @@ export default function NewReturn() {
 
   const picksValid = picks.length > 0 && picks.every((p) => p.reason !== '' && p.quantity >= 1)
 
+  const reviewTotal = useMemo(() => {
+    if (!order) return 0
+    return picks.reduce((sum, p) => {
+      const item = order.items.find((i) => i.id === p.orderItemId)
+      return sum + (item ? item.unitPrice * p.quantity : 0)
+    }, 0)
+  }, [order, picks])
+
   const submit = async () => {
+    if (submitting.current) return
     if (!order || !picksValid) {
       setFormError('Choose at least one item with a quantity and a reason.')
       return
     }
+    submitting.current = true
     setFormError(null)
     setBusy(true)
     try {
@@ -91,17 +134,25 @@ export default function NewReturn() {
       }))
       const created = await createReturn(order.id, items)
       notify(`Return ${created.returnNumber} requested.`)
-      navigate(`/returns/${created.id}`, { replace: true })
+      navigate(isStaff ? `/ops/returns/${created.id}` : `/returns/${created.id}`, { replace: true })
     } catch (err) {
       setFormError(errorMessage(err))
     } finally {
       setBusy(false)
+      submitting.current = false
     }
   }
 
   return (
     <>
-      <PageHead title="Start a return" intro="Three short steps. Only delivered orders can be returned." />
+      <PageHead
+        title="Start a return"
+        intro={
+          isStaff
+            ? 'Three short steps. The return attaches to the order\u2019s customer. Only delivered orders can be returned.'
+            : 'Three short steps. Only delivered orders can be returned.'
+        }
+      />
       <ol
         aria-label="Return progress"
         style={{
@@ -113,33 +164,65 @@ export default function NewReturn() {
           flexWrap: 'wrap',
         }}
       >
-        {STEPS.map((label, i) => (
-          <li
-            key={label}
-            aria-current={i === step ? 'step' : undefined}
-            style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: 'var(--fs-meta)' }}
-          >
-            <span
-              aria-hidden="true"
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: '50%',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                fontWeight: 600,
-                background: i < step ? 'var(--brand)' : i === step ? 'var(--brand-soft)' : 'var(--surface-sunken)',
-                color: i < step ? '#fff' : i === step ? 'var(--brand-strong)' : 'var(--ink-3)',
-                border: i === step ? '1px solid var(--brand)' : '1px solid transparent',
-              }}
+        {STEPS.map((label, i) => {
+          const done = i < step
+          const current = i === step
+          const inner = (
+            <>
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: done ? 'var(--brand)' : current ? 'var(--brand-soft)' : 'var(--surface-sunken)',
+                  color: done ? '#fff' : current ? 'var(--brand-strong)' : 'var(--ink-3)',
+                  border: current ? '1px solid var(--brand)' : '1px solid transparent',
+                }}
+              >
+                {i + 1}
+              </span>
+              <span style={{ fontWeight: current ? 600 : 400 }}>{label}</span>
+            </>
+          )
+          return (
+            <li
+              key={label}
+              aria-current={current ? 'step' : undefined}
+              style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: 'var(--fs-meta)' }}
             >
-              {i + 1}
-            </span>
-            <span style={{ fontWeight: i === step ? 600 : 400 }}>{label}</span>
-          </li>
-        ))}
+              {done ? (
+                <button
+                  type="button"
+                  onClick={() => setStep(i)}
+                  aria-label={`Back to step ${i + 1}: ${label}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 'var(--sp-2)',
+                    background: 'none',
+                    border: 0,
+                    padding: 0,
+                    font: 'inherit',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: 3,
+                  }}
+                >
+                  {inner}
+                </button>
+              ) : (
+                inner
+              )}
+            </li>
+          )
+        })}
       </ol>
 
       {orders.loading && <Skeleton height={160} />}
@@ -190,6 +273,28 @@ export default function NewReturn() {
                 </label>
               ))}
             </div>
+          )}
+          {hasMore ? (
+            <div style={{ marginTop: 'var(--sp-4)' }}>
+              <Button size="sm" disabled={moreBusy} onClick={() => void loadMore()}>
+                {moreBusy ? (
+                  <InlineSpinner label="Loading more orders…" />
+                ) : (
+                  <>Load more orders ({allOrders.length} of {totalElements} shown)</>
+                )}
+              </Button>
+              {moreError && (
+                <p role="alert" className="meta" style={{ color: 'var(--bad)', marginTop: 'var(--sp-2)' }}>
+                  {moreError}
+                </p>
+              )}
+            </div>
+          ) : (
+            totalPages > 1 && (
+              <p className="meta" style={{ marginTop: 'var(--sp-4)' }}>
+                Showing all {allOrders.length} orders.
+              </p>
+            )
           )}
           <div style={{ marginTop: 'var(--sp-5)', display: 'flex', justifyContent: 'flex-end' }}>
             <Button variant="primary" disabled={!order} onClick={() => setStep(1)}>
@@ -319,6 +424,8 @@ export default function NewReturn() {
                   </dt>
                   <dd>
                     {p.reason ? returnReasonLabel[p.reason as ReturnReason] : '—'}
+                    {' · '}
+                    <span className="data">{money(item.unitPrice * p.quantity)}</span>
                     {p.description && <span className="meta"> — {p.description}</span>}{' '}
                     <Button size="sm" onClick={() => setStep(1)}>
                       Edit items
@@ -327,6 +434,10 @@ export default function NewReturn() {
                 </div>
               )
             })}
+            <div className={ui.kv}>
+              <dt>Total affected value</dt>
+              <dd className="data">{money(reviewTotal)}</dd>
+            </div>
           </dl>
           <p style={{ marginTop: 'var(--sp-3)' }}>
             <Button

@@ -15,6 +15,7 @@ function renderRoot() {
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path="/" element={<HomeRoute />} />
+        <Route path="/home" element={<p>inside-shell home</p>} />
         <Route path="/admin" element={<p>admin console</p>} />
         <Route path="/ops" element={<p>operations console</p>} />
         <Route path="/login" element={<p>login screen</p>} />
@@ -42,16 +43,17 @@ describe('HomeRoute', () => {
     )
   })
 
-  it('sends signed-in admins straight to their console', async () => {
+  it('sends signed-in users to the in-shell home instead of the homepage', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: admin, ready: true } as never)
     renderRoot()
-    expect(await screen.findByText('admin console')).toBeInTheDocument()
+    expect(await screen.findByText('inside-shell home')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'The operating system for reverse logistics.' })).not.toBeInTheDocument()
   })
 
-  it('sends signed-in warehouse staff straight to operations', async () => {
+  it('sends signed-in warehouse staff to the in-shell home too', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: staff, ready: true } as never)
     renderRoot()
-    expect(await screen.findByText('operations console')).toBeInTheDocument()
+    expect(await screen.findByText('inside-shell home')).toBeInTheDocument()
   })
 
   it('animates the hero product visual from a calm received snapshot', async () => {

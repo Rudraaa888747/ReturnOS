@@ -16,15 +16,15 @@ function TopNav() {
           ReturnOS
         </Link>
         <nav className={styles.navLinks} aria-label="Sections">
-          <a href="#product">Product</a>
-          <a href="#workflow">Workflow</a>
           <a href="#workspaces">Workspaces</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#product">Product</a>
         </nav>
         <div className={styles.navCtas}>
           <Link to="/login" className={styles.signIn}>
             Sign in
           </Link>
-          <Link to="/login" className={styles.ctaSmall}>
+          <Link to="/register" className={styles.ctaSmall}>
             Explore ReturnOS
           </Link>
         </div>

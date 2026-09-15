@@ -10,7 +10,7 @@ const ROLES = [
     to: '/returns',
     icon: <UserRound size={19} aria-hidden="true" />,
     title: 'Customer',
-    body: 'Track returns, start a return, and see what happens next.',
+    body: 'Track returns and understand what happens next.',
     preview: 'RET-2026-0841 · Received → inspection queued',
     cta: 'Open Customer',
   },
@@ -18,7 +18,7 @@ const ROLES = [
     to: '/ops',
     icon: <ClipboardCheck size={19} aria-hidden="true" />,
     title: 'Warehouse / Operations',
-    body: 'Receive, inspect, and process returned items.',
+    body: 'Work the floor in priority order.',
     preview: 'Approvals · Receiving · Inspection · Tasks',
     cta: 'Open Operations',
   },
@@ -26,7 +26,7 @@ const ROLES = [
     to: '/admin',
     icon: <LineChart size={19} aria-hidden="true" />,
     title: 'Admin',
-    body: 'Monitor returns, recovery, and operational performance.',
+    body: 'Understand recovery, outcomes and operational performance.',
     preview: 'Mix · Completion · Recovery gap · Claims',
     cta: 'Open Admin',
   },
@@ -44,8 +44,8 @@ export function Workspaces() {
           </div>
         </Reveal>
         <ul className={styles.roles}>
-          {ROLES.map((r) => (
-            <Reveal as="li" key={r.title}>
+          {ROLES.map((r, i) => (
+            <Reveal as="li" key={r.title} delay={i * 70}>
               <article className={styles.role} style={{ height: '100%' }}>
                 <span className={styles.roleIcon}>{r.icon}</span>
                 <h3>{r.title}</h3>

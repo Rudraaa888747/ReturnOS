@@ -263,8 +263,19 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--line-strong);
   font-style: normal;
+}
+
+.traffic i:nth-child(1) {
+  background: #df6f68;
+}
+
+.traffic i:nth-child(2) {
+  background: #dfa940;
+}
+
+.traffic i:nth-child(3) {
+  background: #4da272;
 }
 
 .visualBar span:last-child {
@@ -443,6 +454,27 @@
 .vStepNow::before {
   border-color: var(--brand);
   animation: stage-pulse 2.6s ease-in-out infinite;
+}
+
+@media (max-width: 560px) {
+  .visualSteps {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+
+  .vStep {
+    flex: 1 1 28%;
+  }
+
+  .vStep::before,
+  .vStep::after {
+    display: none;
+  }
+
+  .vTrack {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .visualCaption {

@@ -17,7 +17,7 @@ import type {
   VendorClaimStatus,
 } from './types'
 
-const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' })
+const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
 const num = new Intl.NumberFormat('en-IN')
 
 export function money(value: number | null | undefined): string {

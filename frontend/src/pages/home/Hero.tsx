@@ -57,6 +57,8 @@ function ProductVisual() {
         <div className={styles.visualRow}>
           <span className={styles.visualId}>RET-2026-0841</span>
           <span
+            key={stage}
+            className={styles.vNextSwap}
             style={{
               fontSize: 'var(--fs-label)',
               fontWeight: 600,
@@ -117,7 +119,7 @@ export function Hero() {
               Manage returns from request to resolution through one connected operational workflow.
             </p>
             <div className={styles.heroCtas}>
-              <Link to="/login" className={styles.ctaPrimary}>
+              <Link to="/register" className={styles.ctaPrimary}>
                 Explore ReturnOS
               </Link>
               <a href="#workflow" className={styles.ctaQuiet}>

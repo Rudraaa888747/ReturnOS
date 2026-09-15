@@ -5,10 +5,12 @@ import { Shell } from './Shell'
 import { PageSkeleton } from '../components/ui'
 
 const LoginPage = lazy(() => import('../pages/LoginPage'))
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'))
 const RegisterPage = lazy(() => import('../pages/RegisterPage'))
 const ForbiddenPage = lazy(() => import('../pages/ForbiddenPage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 const HomeRoute = lazy(() => import('../pages/home/HomeRoute'))
+const RoleHome = lazy(() => import('../pages/RoleHome'))
 const CustomerReturns = lazy(() => import('../pages/customer/CustomerReturns'))
 const CustomerReturnDetail = lazy(() => import('../pages/customer/CustomerReturnDetail'))
 const NewReturn = lazy(() => import('../pages/customer/NewReturn'))
@@ -28,6 +30,7 @@ function suspended(element: React.ReactNode) {
 
 export const appRoutes = [
   { path: '/login', element: suspended(<LoginPage />) },
+  { path: '/forgot-password', element: suspended(<ForgotPasswordPage />) },
   { path: '/register', element: suspended(<RegisterPage />) },
   { path: '/403', element: suspended(<ForbiddenPage />) },
   // Public homepage for visitors; role workspace for signed-in users.
@@ -43,6 +46,11 @@ export const appRoutes = [
       </RequireAuth>
     ),
     children: [
+      // Authenticated home: renders the role workspace inside the Shell.
+      {
+        path: '/home',
+        element: <RequireAuth>{suspended(<RoleHome />)}</RequireAuth>,
+      },
       {
         path: '/returns',
         element: (
@@ -54,7 +62,7 @@ export const appRoutes = [
       {
         path: '/returns/new',
         element: (
-          <RequireAuth roles={['CUSTOMER']}>
+          <RequireAuth roles={['CUSTOMER', 'WAREHOUSE_STAFF']}>
             {suspended(<NewReturn />)}
           </RequireAuth>
         ),

@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { money } from './format'
 
 describe('money', () => {
-  it('formats Indian Rupees with Indian digit grouping', () => {
-    expect(money(125000)).toBe('₹1,25,000.00')
-    expect(money(4597)).toBe('₹4,597.00')
-    expect(money(12999)).toBe('₹12,999.00')
+  it('formats Indian Rupees with Indian digit grouping and no decimals', () => {
+    expect(money(125000)).toBe('₹1,25,000')
+    expect(money(4597)).toBe('₹4,597')
+    expect(money(12999)).toBe('₹12,999')
+    expect(money(31800.4)).toBe('₹31,800')
   })
 
   it('never emits foreign currency symbols', () => {

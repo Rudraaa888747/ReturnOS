@@ -25,7 +25,7 @@ function navFor(role: string | undefined): NavItem[] {
       { to: '/ops/tasks', label: 'My tasks', match: 'exact' },
     ]
   return [
-    { to: '/', label: 'Home', match: 'exact' },
+    { to: '/home', label: 'Home', match: 'exact' },
     { to: '/returns', label: 'My returns', match: 'section' },
     { to: '/returns/new', label: 'New return', match: 'exact' },
   ]

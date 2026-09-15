@@ -57,7 +57,7 @@ describe('CandidateList', () => {
   it('highlights the pick and keeps ineligible options visible with reasons', () => {
     render(<CandidateList candidates={candidates} picked="RESTOCK" />)
     expect(screen.getByText('Recommended')).toBeInTheDocument()
-    expect(screen.getByText(/549\.05 net/)).toBeInTheDocument()
+    expect(screen.getByText(/549 net/)).toBeInTheDocument()
     expect(screen.getByText('Not eligible')).toBeInTheDocument()
     expect(screen.getByText('Not irreparable.')).toBeInTheDocument()
   })

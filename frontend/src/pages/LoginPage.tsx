@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Package } from 'lucide-react'
+import { Eye, EyeOff, Package } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { errorMessage } from '../lib/api'
 import { Button, Field, FormError, InlineSpinner, TextInput } from '../components/ui'
@@ -13,6 +13,7 @@ export default function LoginPage() {
   const location = useLocation() as { state?: { from?: string } }
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -54,14 +55,43 @@ export default function LoginPage() {
             />
           </Field>
           <Field label="Password" htmlFor="login-password">
-            <TextInput
-              id="login-password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={busy}
-            />
+            <span style={{ position: 'relative', display: 'block' }}>
+              <TextInput
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={busy}
+                style={{ paddingRight: '2.5rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                disabled={busy}
+                style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 0,
+                  padding: '0.25rem',
+                  color: 'var(--ink-3)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                }}
+              >
+                {showPassword ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
+              </button>
+            </span>
+            <span style={{ textAlign: 'right' }}>
+              <Link to="/forgot-password" style={{ fontSize: 'var(--fs-meta)' }}>
+                Forgot password?
+              </Link>
+            </span>
           </Field>
           <FormError message={error} />
           <div style={{ marginTop: 'var(--sp-4)' }}>

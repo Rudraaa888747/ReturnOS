@@ -7,6 +7,7 @@ import type { ReturnStatus } from '../../lib/types'
 import {
   EmptyState,
   Field,
+  LinkButton,
   LoadError,
   PageHead,
   Pagination,
@@ -51,6 +52,9 @@ export default function WorkQueue() {
     else setParams({})
   }
 
+  // The backend has no search endpoint, so text search filters the loaded page only.
+  // While searching, server pagination is hidden to avoid implying the matches span pages.
+  const searching = query.trim().length > 0
   const visible =
     data?.content.filter((r) => {
       const q = query.trim().toLowerCase()
@@ -60,7 +64,15 @@ export default function WorkQueue() {
 
   return (
     <>
-      <PageHead title="Work queue" intro="Scan every return in the building. Oldest first keeps the floor fair." />
+      <PageHead
+        title="Work queue"
+        intro="Scan every return in the building. Oldest first keeps the floor fair."
+        actions={
+          <LinkButton to="/returns/new" variant="secondary">
+            + New return
+          </LinkButton>
+        }
+      />
       <div className={ui.toolbar} role="search">
         <Field label="Status" htmlFor="wq-status">
           <SelectInput id="wq-status" value={status} onChange={(e) => setStatus(e.target.value as '' | ReturnStatus)}>
@@ -93,6 +105,12 @@ export default function WorkQueue() {
         </>
       )}
       {error && <LoadError error={error} onRetry={reload} />}
+      {data && searching && (
+        <p className="meta" role="status" style={{ marginBottom: 'var(--sp-3)' }}>
+          Showing {visible.length} of {data.content.length} results on this page — clear search to page through all{' '}
+          {data.totalElements} returns.
+        </p>
+      )}
       {data && visible.length === 0 && (
         <EmptyState
           title={query || status ? 'Nothing matches' : 'Queue is empty'}
@@ -112,6 +130,7 @@ export default function WorkQueue() {
                   <th scope="col">Contents</th>
                   <th scope="col">Age</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,18 +147,31 @@ export default function WorkQueue() {
                     <td data-th="Status">
                       <ReturnBadge status={r.status} />
                     </td>
+                    <td data-th="Action">
+                      {r.status === 'REQUESTED' ? (
+                        <Link to={`/ops/returns/${r.id}`} className={`${ui.btn} ${ui.btnPrimary} ${ui.btnSm}`}>
+                          Review
+                        </Link>
+                      ) : (
+                        <Link to={`/ops/returns/${r.id}`} className={`${ui.btn} ${ui.btnSecondary} ${ui.btnSm}`}>
+                          Open
+                        </Link>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <Pagination
-            page={data.number}
-            totalPages={data.totalPages}
-            totalElements={data.totalElements}
-            onPage={setPage}
-            label={data.totalElements === 1 ? 'return' : 'returns'}
-          />
+          {!searching && (
+            <Pagination
+              page={data.number}
+              totalPages={data.totalPages}
+              totalElements={data.totalElements}
+              onPage={setPage}
+              label={data.totalElements === 1 ? 'return' : 'returns'}
+            />
+          )}
         </>
       )}
     </>

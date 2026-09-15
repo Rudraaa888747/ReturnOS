@@ -172,7 +172,7 @@ export function FinalCta() {
             <h2 id="cta-h">Every return has an outcome.</h2>
             <p>ReturnOS makes the journey visible from request to resolution.</p>
             <div className={styles.bandCtas}>
-              <Link to="/login" className={styles.bandPrimary}>
+              <Link to="/register" className={styles.bandPrimary}>
                 Explore ReturnOS
               </Link>
               <Link to="/login" className={styles.bandQuiet}>

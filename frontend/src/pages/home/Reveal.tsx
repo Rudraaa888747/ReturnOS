@@ -10,10 +10,13 @@ export function Reveal({
   children,
   as: Tag = 'div',
   motion = 'rise',
+  delay = 0,
 }: {
   children: ReactNode
   as?: 'div' | 'li' | 'section'
   motion?: 'rise' | 'fade'
+  /** Stagger in ms. Keep small (≤120) and only for grouped siblings. */
+  delay?: number
 }) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [shown, setShown] = useState(false)
@@ -42,6 +45,7 @@ export function Reveal({
     <Tag
       ref={ref as never}
       className={`${styles.reveal} ${motion === 'fade' ? styles.revealFade : ''} ${shown ? styles.revealIn : ''}`}
+      style={{ transitionDelay: delay > 0 ? `${delay}ms` : undefined }}
     >
       {children}
     </Tag>
