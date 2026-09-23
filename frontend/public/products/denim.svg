@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Hand-drawn denim jeans illustration">
+  <rect width="400" height="300" rx="24" fill="#f6f6f3"/>
+  <ellipse cx="200" cy="280" rx="140" ry="12" fill="#eceee8"/>
+  <g stroke="#16191f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M110 80 L110 230 C110 245 122 258 138 258 L262 258 C278 258 290 245 290 230 L290 80 Z" fill="#2c3e6b"/>
+    <path d="M140 80 C140 60 155 50 172 50 L228 50 C245 50 260 60 260 80" fill="none"/>
+    <path d="M140 80 L140 110" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <path d="M260 80 L260 110" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <path d="M150 100 L250 100" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <path d="M150 130 L250 130" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <path d="M150 160 L250 160" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <path d="M150 190 L250 190" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <path d="M150 220 L250 220" fill="none" stroke="#3d5a8a" stroke-width="2"/>
+    <circle cx="172" cy="50" r="4" fill="#e8c547" stroke="#16191f" stroke-width="2"/>
+    <circle cx="228" cy="50" r="4" fill="#e8c547" stroke="#16191f" stroke-width="2"/>
+    <rect x="190" y="70" width="20" height="30" rx="2" fill="#e8c547" stroke="#16191f" stroke-width="2"/>
+  </g>
+  <circle cx="78" cy="70" r="6" fill="#1d4ed8" opacity="0.25"/>
+  <circle cx="326" cy="82" r="9" fill="none" stroke="#1d4ed8" stroke-width="4" opacity="0.5"/>
+</svg>

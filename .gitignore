@@ -1,0 +1,38 @@
+target/
+.idea/
+.vscode/
+*.iml
+.env
+.DS_Store
+logs/
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+demo.log
+demo-err.log
+*.pid
+
+backend.pid
+frontend/vite.pid
+
+node_modules/
+dist/
+backend/dist/
+backend/data/
+backend/uploads/
+backend/uploads-test/
+frontend/dist/
+
+# Test artifacts and reports
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+frontend/.playwright-cli/
+
+# E2E screenshots: these capture real admin screens, including customer
+# email addresses from the demo data, so they stay out of the repository.
+frontend/e2e/screenshots/
+
+# Local scratch
+*.tsbuildinfo

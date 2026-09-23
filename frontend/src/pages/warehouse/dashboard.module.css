@@ -1,0 +1,334 @@
+/* Dashboard: dense stat grid + ops panels. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--sp-2);
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  border-top: 3px solid var(--line-strong);
+  transition: transform var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out), background var(--dur-med) var(--ease-out);
+}
+
+.statAlert {
+  border-top-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.statValue {
+  font-size: var(--fs-metric);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-display);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.statAlert .statValue {
+  color: var(--bad);
+  animation: stat-pulse 2.4s var(--ease-out) infinite;
+}
+
+/* Gentle attention pulse on the number only — the tile stays scannable. */
+@keyframes stat-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.statLabel {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+/* Whole-tile link: the hit area fills the tile so the stat reads as one
+ * interactive element, not a label with a link inside it. */
+.statHit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: calc(-1 * var(--sp-3));
+  padding: var(--sp-3);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+}
+
+.statHit .statLabel {
+  color: var(--brand-strong);
+  font-weight: var(--weight-medium);
+}
+
+.statHit:focus {
+  outline: none;
+}
+
+.statHit:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Premium tile interaction, same language as buttons and filter chips:
+ * lift + deepen on hover, soft tint (never a solid block) while pressed,
+ * mirrored for keyboard focus via :focus-within. */
+.statClickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--brand);
+  border-top-color: var(--brand);
+}
+
+.statClickable:focus-within {
+  border-color: var(--brand);
+  border-top-color: var(--brand);
+  box-shadow: var(--shadow-lift);
+}
+
+.statClickable:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: none;
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.statAlert.statClickable:active {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--sp-4) var(--sp-5);
+  min-width: 0;
+  box-shadow: var(--shadow-soft);
+}
+
+.panelTitle {
+  font-size: var(--fs-title-sm);
+  font-weight: var(--weight-semibold);
+  margin: 0 0 var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.muted {
+  color: var(--ink-3);
+  font-size: var(--fs-body);
+  margin: 0;
+}
+
+.mono {
+  font-family: var(--font-data);
+  font-size: var(--fs-meta);
+}
+
+.taskCounts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Non-interactive status pills: same pill language as the filter chips, but
+ * spans — these counts filter nothing, so they must not look like buttons. */
+.taskChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+  font-size: var(--fs-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-2);
+  transition: transform var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out);
+}
+
+.taskChip:hover {
+  transform: translateY(-1px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Urgency tints: background + border only, text stays ink for contrast. */
+.taskWarn {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.taskBad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.taskOk {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.taskCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  font-size: var(--fs-label);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.warnList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.warnRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-body);
+  border: 1px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.warnRow code {
+  margin-left: auto;
+  color: var(--ink-3);
+}
+
+.tableWrap {
+  overflow: auto;
+  max-height: 72vh;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+  min-width: 640px;
+}
+
+.table th {
+  text-align: left;
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-sunken);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.table td {
+  padding: 10px var(--sp-3);
+  border-bottom: 1px dashed var(--line);
+  vertical-align: middle;
+  transition: background var(--dur-med) var(--ease-out);
+}
+
+.table tbody tr:hover td {
+  background: var(--paper);
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Priority pills: text-led, never solid fills. */
+.pri {
+  display: inline-block;
+  font-size: var(--fs-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.priUrgent {
+  color: var(--bad);
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.priHigh {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.priNormal {
+  color: var(--info);
+  border-color: var(--info);
+  background: var(--info-soft);
+}
+
+.priLow {
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statAlert .statValue {
+    animation: none;
+  }
+
+  .stat,
+  .statClickable:hover,
+  .statClickable:active,
+  .taskChip,
+  .taskChip:hover,
+  .table td {
+    transition: none;
+    transform: none;
+    box-shadow: none;
+  }
+}

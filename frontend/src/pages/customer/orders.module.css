@@ -1,0 +1,334 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  min-width: 0;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+  min-width: 640px;
+}
+
+.table th {
+  text-align: left;
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-sunken);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.mono {
+  font-family: var(--font-data);
+  overflow-wrap: anywhere;
+}
+
+.rowLink {
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-data);
+  white-space: nowrap;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.metaLabel {
+  font-size: var(--fs-label);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.metaValue {
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.banner {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-5);
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+
+.bannerOk {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+}
+
+.bannerBad {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+
+.bannerIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.bannerOk .bannerIcon {
+  color: var(--ok);
+}
+
+.bannerBad .bannerIcon {
+  color: var(--bad);
+}
+
+.bannerTitle {
+  font-weight: var(--weight-semibold);
+  margin-bottom: 2px;
+}
+
+.bannerText {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+
+.sectionTitle {
+  font-size: var(--fs-title);
+  margin-bottom: var(--sp-3);
+}
+
+.ineligible {
+  color: var(--ink-faint);
+  font-size: var(--fs-meta);
+}
+
+.startLink {
+  font-weight: var(--weight-semibold);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.shopLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transition: background var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+.shopLink:hover {
+  background: var(--brand-strong);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.helper {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.productCell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  max-width: 280px;
+}
+
+.productThumb {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.productNames {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.totalsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0;
+}
+
+.totalsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--fs-body);
+}
+
+.totalsRowTotal {
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-2);
+  font-weight: var(--weight-semibold);
+}
+
+.addressText {
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.detailThumb {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.itemCell {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.actionRow {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-top: var(--sp-3);
+}
+
+.actionBtn {
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  text-decoration: none;
+  transition: border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+.actionBtn:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.timeline {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineItem {
+  position: relative;
+  padding: 0 0 var(--sp-4) var(--sp-5);
+  border-left: 2px solid var(--line-strong);
+  margin-left: 6px;
+}
+
+.timelineItem:last-child {
+  padding-bottom: 0;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -7px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 2px solid var(--surface);
+  outline: 1px solid var(--brand);
+}
+
+.timelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.timelineStatus {
+  font-weight: var(--weight-semibold);
+}
+
+.timelineDate {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.timelineDesc {
+  color: var(--ink-2);
+}
+
+@media (max-width: 960px) {
+  .metaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+}

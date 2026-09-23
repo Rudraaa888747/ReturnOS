@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Hand-drawn headphones illustration">
+  <rect width="400" height="300" rx="24" fill="#f6f6f3"/>
+  <ellipse cx="200" cy="250" rx="110" ry="13" fill="#eceee8"/>
+  <g stroke="#16191f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M118 190 L118 150 C118 96 152 60 200 60 C248 60 282 96 282 150 L282 190" fill="none"/>
+    <path d="M118 150 C118 96 152 60 200 60 C248 60 282 96 282 150" fill="none" stroke="#1d4ed8" opacity="0.45"/>
+    <rect x="96" y="150" width="48" height="86" rx="20" fill="#ffffff"/>
+    <rect x="256" y="150" width="48" height="86" rx="20" fill="#ffffff"/>
+    <rect x="110" y="164" width="20" height="58" rx="10" fill="#e5edfb" stroke-width="4"/>
+    <rect x="270" y="164" width="20" height="58" rx="10" fill="#e5edfb" stroke-width="4"/>
+    <path d="M150 92 C164 78 182 72 200 72" fill="none" stroke="#1d4ed8"/>
+    <circle cx="316" cy="76" r="5" fill="#1d4ed8" stroke="none"/>
+    <path d="M300 100 C306 112 306 126 300 138" fill="none"/>
+    <path d="M312 94 C322 112 322 132 312 150" fill="none"/>
+  </g>
+</svg>

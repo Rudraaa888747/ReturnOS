@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Hand-drawn t-shirt illustration">
+  <rect width="400" height="300" rx="24" fill="#f6f6f3"/>
+  <ellipse cx="200" cy="250" rx="110" ry="13" fill="#eceee8"/>
+  <g stroke="#16191f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M150 70 L118 86 L88 124 L118 142 L132 128 L132 232 C132 240 138 244 146 244 L254 244 C262 244 268 240 268 232 L268 128 L282 142 L312 124 L282 86 L250 70 C244 88 224 98 200 98 C176 98 156 88 150 70 Z" fill="#ffffff"/>
+    <path d="M150 70 C156 88 176 98 200 98 C224 98 244 88 250 70 C244 78 224 90 200 90 C176 90 156 78 150 70 Z" fill="#e5edfb"/>
+    <path d="M132 128 L168 116 M268 128 L232 116" fill="none" stroke="#1d4ed8"/>
+    <path d="M150 244 L150 200 M250 244 L250 200" fill="none" opacity="0.25"/>
+    <circle cx="200" cy="160" r="10" fill="none" stroke="#1d4ed8"/>
+    <path d="M195 160 L198.5 163.5 L205 156" fill="none" stroke="#1d4ed8" stroke-width="3.5"/>
+  </g>
+</svg>

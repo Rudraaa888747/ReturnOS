@@ -1,0 +1,249 @@
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-6);
+}
+
+.kicker {
+  font-size: var(--fs-label);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-strong);
+  margin-bottom: var(--sp-1);
+}
+
+.title {
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  margin-bottom: var(--sp-1);
+}
+
+.lede {
+  color: var(--ink-3);
+  max-width: 64ch;
+}
+
+.actions {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.toneInfo { color: var(--info); background: var(--info-soft); border-color: var(--info); }
+.toneOk { color: var(--ok); background: var(--ok-soft); border-color: var(--ok); }
+.toneWarn { color: var(--warn); background: var(--warn-soft); border-color: var(--warn); }
+.toneBad { color: var(--bad); background: var(--bad-soft); border-color: var(--bad); }
+
+.state {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--sp-8), 5vw, var(--sp-12)) var(--sp-6);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.state h2 {
+  font-size: var(--fs-title);
+}
+
+.state p {
+  color: var(--ink-3);
+  max-width: 52ch;
+}
+
+.stateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  margin-bottom: var(--sp-2);
+}
+
+.stateIconError {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+
+.stateAction {
+  margin-top: var(--sp-3);
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-med) var(--ease-spring),
+    box-shadow var(--dur-med) var(--ease-out);
+}
+
+.retryBtn:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+.retryBtn:active { transform: translateY(0) scale(0.985); box-shadow: none; }
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(420px, 100%);
+  margin-bottom: var(--sp-2);
+}
+
+.skeleton span {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-sunken) 25%, var(--line) 50%, var(--surface-sunken) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.skeleton span:nth-child(2) { width: 82%; }
+.skeleton span:nth-child(3) { width: 64%; }
+
+.fieldError {
+  color: var(--bad);
+  font-size: var(--fs-meta);
+  font-weight: var(--weight-medium);
+  margin: var(--sp-1) 0 0;
+}
+
+/* ---- Shared filter chips (pill group with count badges) ---- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.chip {
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  transition: background var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+.chip:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.chip:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Active pill: brand gradient + a springy pop when it becomes active. */
+.chipActive {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  border-color: var(--brand-strong);
+  color: #fff;
+  box-shadow: var(--shadow-soft);
+  animation: chip-activate 240ms var(--ease-spring);
+}
+
+.chipActive:hover {
+  color: #fff;
+  border-color: var(--brand-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+@keyframes chip-activate {
+  from {
+    transform: scale(0.94);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Count badge inside each chip, visually separated from the label. */
+.chipCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  font-size: var(--fs-label);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  transition: background var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out);
+}
+
+.chip:hover .chipCount {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.chipActive .chipCount {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton span { animation: none; }
+  .chip,
+  .chipActive { animation: none; transition: none; }
+  .chip:hover { transform: none; }
+}

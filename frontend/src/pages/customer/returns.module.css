@@ -1,0 +1,915 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+
+  /* Supporting tokens for this page only (existing token values untouched):
+   * layered glow + brand gradient so hover/active states feel deep, not flat. */
+  --shadow-glow: 0 0 0 4px rgba(29, 78, 216, 0.14), 0 10px 28px -10px rgba(29, 78, 216, 0.55);
+  --brand-gradient: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4) var(--sp-5);
+  padding-left: calc(var(--sp-5) + 4px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+  transition: transform var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+  /* Staggered fade + slide-up on mount. `backwards` fill applies the
+   * from-state during the delay only, so the hover lift keeps working. */
+  animation: card-enter var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--card-index, 0) * 55ms);
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--line-strong);
+}
+
+/* Status accent bar: thin colored edge reflecting the return's group. */
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ink-3);
+}
+
+.cardActive::before {
+  background: var(--brand);
+}
+
+.cardCompleted::before {
+  background: var(--ok);
+}
+
+.cardCancelled::before {
+  background: var(--bad);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.returnNumber {
+  font-family: var(--font-data);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.cardMeta dt {
+  font-size: var(--fs-label);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cardMeta dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.cardFoot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 44px;
+  font-weight: var(--weight-semibold);
+  transition: color var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) var(--ease-out), filter var(--dur-med) var(--ease-out);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Prominent CTA variant (empty-state action): gradient button, not a plain link. */
+.linkCta {
+  background: var(--brand-gradient);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-5);
+  box-shadow: var(--shadow-soft);
+  text-decoration: none;
+}
+
+.linkCta:hover {
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
+  filter: brightness(1.06);
+}
+
+.linkCta:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+/* Button/links icons (e.g. Plus) get a playful rotate on hover. */
+.btnIcon {
+  transition: transform var(--dur-med) var(--ease-spring);
+}
+
+.link:hover .btnIcon,
+.btn:hover .btnIcon {
+  transform: rotate(90deg);
+}
+
+.helper {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  transition: border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-out);
+}
+
+.searchRow:focus-within {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.005);
+}
+
+.searchIcon {
+  flex: none;
+  color: var(--ink-3);
+  transition: color var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+.searchRow:focus-within .searchIcon {
+  color: var(--brand-strong);
+  transform: scale(1.1);
+}
+
+/* Clear (×) button: fades in only when there is text (rendered conditionally). */
+.searchClear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  cursor: pointer;
+  animation: search-clear-in var(--dur-med) var(--ease-spring);
+  transition: background var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+@keyframes search-clear-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.searchClear:hover {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  transform: scale(1.06);
+}
+
+.searchClear:active {
+  transform: scale(0.94);
+}
+
+.searchClear:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.searchLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.searchInput {
+  font: inherit;
+  flex: 1;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.productRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+/* Overflow-hidden frame so the thumbnail can zoom softly on card hover. */
+.thumbWrap {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.productThumb {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+/* Inside the hover-zoom frame the image fills the wrapper instead. */
+.thumbWrap .productThumb {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.card:hover .productThumb {
+  transform: scale(1.05);
+}
+
+.productThumbFallback {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+.productMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.productName {
+  font-size: var(--fs-title-sm);
+  font-weight: var(--weight-semibold);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.productSub {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  margin: 2px 0 0;
+}
+
+.productHero {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+/* Gentle halo pulse for badges on returns that are actively moving.
+ * The shared StatusBadge keeps its soft-background + colored-text tones;
+ * this wrapper only adds motion, never a solid fill. */
+.statusPulse {
+  display: inline-flex;
+  flex: none;
+  border-radius: var(--radius-pill);
+  animation: status-pulse 2.2s var(--ease-out) infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(183, 121, 31, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(183, 121, 31, 0.16);
+  }
+}
+
+.productHeroImage {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.productHeroMeta {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  margin: 2px 0 0;
+  font-family: var(--font-data);
+}
+
+.metaLinks {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-top: var(--sp-2);
+}
+
+/* ---- Detail ---- */
+
+.header {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.headerTitle {
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  overflow-wrap: anywhere;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 44px;
+  font-weight: var(--weight-semibold);
+}
+
+.banner {
+  background: var(--ok-soft);
+  border: 1px solid var(--ok);
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1.6fr 1fr;
+    align-items: start;
+  }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  min-width: 0;
+}
+
+.panel h2 {
+  font-size: var(--fs-title);
+  margin-bottom: var(--sp-3);
+}
+
+.panel h3 {
+  font-size: var(--fs-title-sm);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.qa {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-3);
+}
+
+@media (min-width: 720px) {
+  .qa {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.qaItem {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+}
+
+.qaItem h3 {
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  margin: 0 0 var(--sp-1);
+}
+
+.qaItem p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+table.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+  min-width: 560px;
+}
+
+.table th {
+  text-align: left;
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-sunken);
+}
+
+.table td {
+  padding: var(--sp-3);
+  border-bottom: 1px dashed var(--line);
+  vertical-align: top;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.mono {
+  font-family: var(--font-data);
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineItem {
+  position: relative;
+  padding: 0 0 var(--sp-4) var(--sp-5);
+  border-left: 2px solid var(--line-strong);
+  /* Subtle route-line gradient instead of a flat rule. The solid color
+   * stays as the fallback if gradients are unsupported. */
+  border-image: linear-gradient(to bottom, var(--brand) 0%, var(--line-strong) 55%) 1;
+  margin-left: 6px;
+}
+
+.timelineItem:last-child {
+  padding-bottom: 0;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -7px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 2px solid var(--surface);
+  outline: 1px solid var(--brand);
+}
+
+/* Events are oldest-first, so the last dot is the current position. */
+.timelineItem:last-child .timelineDot {
+  animation: timeline-ping 2.2s var(--ease-out) infinite;
+}
+
+@keyframes timeline-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 78, 216, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(29, 78, 216, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 78, 216, 0);
+  }
+}
+
+.timelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.timelineStatus {
+  font-weight: var(--weight-semibold);
+}
+
+.timelineDate {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.timelineDesc {
+  color: var(--ink-2);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.kv div {
+  min-width: 0;
+}
+
+.kv dt {
+  font-size: var(--fs-label);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.kv dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.docList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.docRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.docName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.docMeta {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.btn {
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  transition: background var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+.btn:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btnPrimary {
+  background: var(--brand-gradient);
+  border-color: var(--brand-strong);
+  color: #fff;
+  transition: background var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring), filter var(--dur-med) var(--ease-out);
+}
+
+.btnPrimary:hover {
+  background: var(--brand-gradient);
+  border-color: var(--brand-strong);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
+  filter: brightness(1.07);
+}
+
+.btnPrimary:active {
+  transform: scale(0.97);
+  box-shadow: none;
+  filter: brightness(0.98);
+}
+
+.btnDanger:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.label {
+  font-weight: var(--weight-semibold);
+  display: block;
+  margin-bottom: var(--sp-1);
+}
+
+.input,
+.select,
+.textarea {
+  font: inherit;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px var(--brand-soft);
+}
+
+.textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.ratingRow {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.star {
+  font: inherit;
+  width: 48px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  transition: background var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-spring);
+}
+
+.star:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.star:active {
+  transform: translateY(0) scale(0.985);
+  box-shadow: none;
+}
+
+.starActive {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.notice {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--ink-2);
+}
+
+.noticeError {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.actions {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Secondary identifiers (return number) read as data, not as the headline. */
+.cardMono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Skeleton loading: placeholders shaped like real return cards ---- */
+
+.skeletonList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+}
+
+.skeletonCard {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.skeletonThumb,
+.skeletonLines span {
+  background: linear-gradient(100deg, var(--surface-sunken) 40%, #fafaf7 50%, var(--surface-sunken) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s var(--ease-out) infinite;
+}
+
+.skeletonThumb {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: var(--radius-lg);
+}
+
+.skeletonLines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.skeletonLines span {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonLines span:last-child {
+  width: 55%;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---- Motion discipline: honor users who prefer reduced motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .btn,
+  .link,
+  .linkCta,
+  .productThumb,
+  .searchRow,
+  .searchClear,
+  .statusPulse,
+  .timelineItem:last-child .timelineDot,
+  .skeletonThumb,
+  .skeletonLines span {
+    animation: none;
+    transition: none;
+  }
+
+  .card:hover,
+  .btn:hover,
+  .linkCta:hover {
+    transform: none;
+  }
+}

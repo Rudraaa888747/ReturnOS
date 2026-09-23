@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Hand-drawn jeans illustration">
+  <rect width="400" height="300" rx="24" fill="#f6f6f3"/>
+  <ellipse cx="200" cy="252" rx="110" ry="13" fill="#eceee8"/>
+  <g stroke="#16191f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M140 56 L260 56 L268 120 L246 128 L240 244 C240 250 236 254 230 254 L206 254 C200 254 196 250 196 244 L192 140 L188 140 L184 244 C184 250 180 254 174 254 L150 254 C144 254 140 250 140 244 L134 128 L112 120 Z" fill="#ffffff"/>
+    <path d="M140 56 L260 56 L262 78 L138 78 Z" fill="#e5edfb"/>
+    <path d="M192 140 L188 140" fill="none"/>
+    <path d="M168 78 L168 96 M232 78 L232 96" fill="none" stroke="#1d4ed8"/>
+    <circle cx="200" cy="88" r="4" fill="#1d4ed8" stroke="none"/>
+    <path d="M150 150 L182 150 M198 150 L230 150" fill="none" opacity="0.3"/>
+    <path d="M150 200 L180 200 M200 200 L230 200" fill="none" stroke="#1d4ed8" opacity="0.6"/>
+    <path d="M146 232 L178 232 M202 232 L234 232" fill="none" opacity="0.3"/>
+  </g>
+</svg>

@@ -1,0 +1,115 @@
+/* Dock Ledger — ReturnOS design tokens. Single source of truth for the visual system. */
+
+:root {
+  /* Type */
+  --font-ui: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-data: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --fs-label: 0.75rem;
+  --fs-meta: 0.8125rem;
+  --fs-body: 0.875rem;
+  --fs-title-sm: 1rem;
+  --fs-title: 1.125rem;
+  --fs-page: 1.625rem;
+  --fs-metric: 1.5rem;
+  --lh-tight: 1.25;
+  --lh-body: 1.5;
+  --tracking-display: -0.02em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing (4px base) */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+
+  /* Surfaces: warm off-white paper, white work surfaces */
+  --paper: #f6f6f3;
+  --surface: #ffffff;
+  --surface-sunken: #eceee8;
+  --surface-overlay: #ffffff;
+
+  /* Ink: graphite hierarchy */
+  --ink: #16191f;
+  --ink-2: #3d434d;
+  --ink-3: #616a76;
+  --ink-faint: #8b93a1;
+
+  /* Lines: cool gray */
+  --line: #e0e3e8;
+  --line-strong: #c6ccd4;
+
+  /* Brand: deep maritime blue. Green is reserved for success states only. */
+  --brand: #1d4ed8;
+  --brand-strong: #1e3a8a;
+  --brand-soft: #e5edfb;
+  --brand-ink: #ffffff;
+
+  /* Semantic */
+  --ok: #3e7c4f;
+  --ok-soft: #e6f0e8;
+  --warn: #b7791f;
+  --warn-soft: #f7ecd4;
+  --bad: #b3372f;
+  --bad-soft: #f7e3e1;
+  --info: #1d4ed8;
+  --info-soft: #e5edfb;
+
+  /* Risk (always paired with label + icon) */
+  --risk-low: #3e7c4f;
+  --risk-low-soft: #e6f0e8;
+  --risk-medium: #b7791f;
+  --risk-medium-soft: #f7ecd4;
+  --risk-high: #b3372f;
+  --risk-high-soft: #f7e3e1;
+
+  /* Disposition markers (muted, text-led; green reserved for success only) */
+  --disp-restock: #2563a8;
+  --disp-refurbish: #4c5b9e;
+  --disp-resell: #2f5d8a;
+  --disp-vendor: #8a6d1f;
+  --disp-liquidate: #b7791f;
+  --disp-recycle: #64748b;
+  --disp-scrap: #3f454d;
+
+  /* Shape — premium soft hierarchy (Apple-like tactility, ReturnOS identity).
+   * sm: tiny chips, code tags, table flags. md: buttons, inputs, list rows.
+   * lg: cards, panels, dialogs. xl: hero moments (console, CTA band, auth).
+   * pill: badges, stamps, toggles, progress tracks. */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Elevation: subtle depth, never heavy. Rest state is border-defined;
+   * soft shadows lift only hero surfaces, hover states, and overlays. */
+  --shadow-soft: 0 1px 2px rgba(20, 24, 29, 0.05), 0 12px 32px -16px rgba(20, 24, 29, 0.18);
+  --shadow-lift: 0 2px 4px rgba(20, 24, 29, 0.06), 0 16px 40px -16px rgba(29, 78, 216, 0.25);
+  --shadow-pop: 0 8px 28px rgba(20, 24, 29, 0.14), 0 2px 6px rgba(20, 24, 29, 0.1);
+
+  /* Motion — expensive and intentional: quick press, smooth settle. */
+  --dur-fast: 120ms;
+  --dur-med: 180ms;
+  --dur-slow: 320ms;
+  --ease-out: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --measure-ops: 1200px;
+  --measure-read: 880px;
+  --nav-w: 248px;
+  --topbar-h: 60px;
+
+  /* Breakpoints (mirror in hooks via matchMedia where needed) */
+  --bp-sm: 640px;
+  --bp-md: 960px;
+  --bp-lg: 1280px;
+}
