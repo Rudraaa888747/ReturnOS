@@ -1,0 +1,28 @@
+package com.returnos.commerce;
+
+import com.returnos.auth.CurrentUser;
+import com.returnos.common.ApiException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import java.util.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+@RestController @RequestMapping("/api/v1") public class CommerceController {
+  private final JdbcTemplate jdbc; CommerceController(JdbcTemplate jdbc){this.jdbc=jdbc;}
+  record CartInput(@NotBlank String productId,@Min(1) int quantity){} record Quantity(@Min(0) int quantity){}
+  private void customer(CurrentUser u){if(u==null)throw new ApiException(HttpStatus.UNAUTHORIZED,"UNAUTHORIZED","Authentication required");if(!"CUSTOMER".equals(u.role()))throw new ApiException(HttpStatus.FORBIDDEN,"FORBIDDEN","Customer access required");}
+  @GetMapping("/products") Map<String,Object> products(@AuthenticationPrincipal CurrentUser u){customer(u);return Map.of("products",jdbc.query("select id,sku,name,description,details,price_paise,image_url,stock,active from products where active=true order by name",(rs,n)->dto(rs)));}
+  @GetMapping("/products/{id}") Map<String,Object> product(@AuthenticationPrincipal CurrentUser u,@PathVariable String id){customer(u);var x=jdbc.query("select id,sku,name,description,details,price_paise,image_url,stock,active from products where id=? and active=true",(rs,n)->dto(rs),id);if(x.isEmpty())throw new ApiException(HttpStatus.NOT_FOUND,"PRODUCT_NOT_FOUND","Product not found");return Map.of("product",x.getFirst());}
+  private static Map<String,Object> dto(java.sql.ResultSet rs)throws java.sql.SQLException{var m=new LinkedHashMap<String,Object>();m.put("id",rs.getString("id"));m.put("sku",rs.getString("sku"));m.put("name",rs.getString("name"));m.put("description",rs.getString("description"));m.put("details",rs.getString("details"));m.put("pricePaise",rs.getInt("price_paise"));String img=rs.getString("image_url");m.put("imageUrl",img==null||img.isEmpty()?null:img);m.put("stock",rs.getInt("stock"));m.put("active",rs.getBoolean("active"));return m;}
+  @GetMapping("/cart") Map<String,Object> cart(@AuthenticationPrincipal CurrentUser u){customer(u);return cartFor(u.id());}
+  @PostMapping("/cart") @ResponseStatus(HttpStatus.CREATED) @Transactional Map<String,Object> add(@AuthenticationPrincipal CurrentUser u,@Valid @RequestBody CartInput b){customer(u);var p=jdbc.query("select name,stock from products where id=? and active=true",(rs,n)->Map.of("name",rs.getString(1),"stock",rs.getInt(2)),b.productId());if(p.isEmpty())throw new ApiException(HttpStatus.NOT_FOUND,"PRODUCT_NOT_FOUND","Product not found");int stock=(int)p.getFirst().get("stock");int existing=jdbc.queryForObject("select coalesce(sum(quantity),0) from cart_items where user_id=? and product_id=?",Integer.class,u.id(),b.productId());if(existing+b.quantity()>stock)throw new ApiException(HttpStatus.CONFLICT,"INSUFFICIENT_STOCK","Only "+stock+" units available for "+p.getFirst().get("name"));jdbc.update("insert into cart_items(user_id,product_id,quantity) values(?,?,?) on conflict(user_id,product_id) do update set quantity=cart_items.quantity+excluded.quantity,updated_at=now()",u.id(),b.productId(),b.quantity());return cartFor(u.id());}
+  @PatchMapping("/cart/{productId}") @Transactional Map<String,Object> set(@AuthenticationPrincipal CurrentUser u,@PathVariable String productId,@Valid @RequestBody Quantity b){customer(u);if(b.quantity()==0){jdbc.update("delete from cart_items where user_id=? and product_id=?",u.id(),productId);return cartFor(u.id());}var p=jdbc.query("select name,stock from products where id=? and active=true",(rs,n)->Map.of("name",rs.getString(1),"stock",rs.getInt(2)),productId);if(p.isEmpty())throw new ApiException(HttpStatus.NOT_FOUND,"PRODUCT_NOT_FOUND","Product not found");int stock=(int)p.getFirst().get("stock");if(b.quantity()>stock)throw new ApiException(HttpStatus.CONFLICT,"INSUFFICIENT_STOCK","Only "+stock+" units available for "+p.getFirst().get("name"));jdbc.update("insert into cart_items(user_id,product_id,quantity) values(?,?,?) on conflict(user_id,product_id) do update set quantity=excluded.quantity,updated_at=now()",u.id(),productId,b.quantity());return cartFor(u.id());}
+  @DeleteMapping("/cart/{productId}") @Transactional Map<String,Object> remove(@AuthenticationPrincipal CurrentUser u,@PathVariable String productId){customer(u);jdbc.update("delete from cart_items where user_id=? and product_id=?",u.id(),productId);return cartFor(u.id());}
+  private Map<String,Object> cartFor(String id){var items=jdbc.query("select c.product_id as \"productId\",c.quantity,p.sku,p.name,p.price_paise as \"pricePaise\",nullif(p.image_url,'') as \"imageUrl\",p.stock from cart_items c join products p on p.id=c.product_id where c.user_id=? order by p.name",(rs,n)->row(rs),id);int subtotal=0,qty=0;for(var x:items){int line=((Number)x.get("quantity")).intValue()*((Number)x.get("pricePaise")).intValue();x.put("lineTotalPaise",line);subtotal+=line;qty+=((Number)x.get("quantity")).intValue();}return Map.of("items",items,"subtotalPaise",subtotal,"totalQuantity",qty);}
+  private static Map<String,Object> row(java.sql.ResultSet r)throws java.sql.SQLException{var m=new LinkedHashMap<String,Object>();var md=r.getMetaData();for(int i=1;i<=md.getColumnCount();i++)m.put(md.getColumnLabel(i),r.getObject(i));return m;}
+}

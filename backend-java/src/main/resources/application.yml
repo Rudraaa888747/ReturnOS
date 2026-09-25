@@ -1,0 +1,20 @@
+spring:
+  application.name: returnos-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/returnos}
+    username: ${DATABASE_USERNAME:returnos}
+    password: ${DATABASE_PASSWORD:returnos}
+    hikari:
+      connection-init-sql: SET TIME ZONE 'UTC'
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+server:
+  port: ${PORT:8080}
+returnos:
+  jwt-secret: ${JWT_SECRET:}
+  jwt-expiration-days: ${JWT_EXPIRATION_DAYS:7}
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173}

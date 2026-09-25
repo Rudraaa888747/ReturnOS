@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+MAVEN_HOME="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/.maven/apache-maven-3.9.11"
+exec "$MAVEN_HOME/bin/mvn" "$@"

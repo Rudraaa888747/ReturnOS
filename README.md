@@ -63,7 +63,7 @@ sees everything and writes almost nothing — deliberately.
                  │                 │                 │
                  └────────── React 19 / Vite ─────────┘
                                    │
-                          Express 4 + TypeScript
+                    Express 4 + TypeScript (current reference)
                                    │
                  ┌─────────────────┴─────────────────┐
                  │   store.ts · warehouse/ · admin/  │
@@ -76,6 +76,7 @@ sees everything and writes almost nothing — deliberately.
 | | |
 |---|---|
 | **Backend** | Express 4, TypeScript (ESM), better-sqlite3 (synchronous), Zod, JWT + bcrypt |
+| **Java migration** | `backend-java/`: Java 21, Spring Boot, Spring Security, JDBC, PostgreSQL, Flyway, JWT + BCrypt |
 | **Frontend** | React 19, Vite 8, react-router 7, CSS Modules + design tokens, lucide-react |
 | **Tests** | vitest + supertest (backend), vitest + Testing Library (frontend), Playwright (e2e) |
 | **Schema** | No migration files. `initSchema()` runs idempotent `CREATE TABLE IF NOT EXISTS` plus guarded `ALTER TABLE` checks |
@@ -89,6 +90,28 @@ price, total, eligibility decision and status transition comes from the server.
 ## Quick start
 
 Requires Node 20+.
+
+### Java/PostgreSQL migration backend
+
+The original backend is deliberately retained while parity work is in progress.
+The Java service lives in `backend-java` and uses PostgreSQL rather than the
+SQLite file. It requires Java 21, Maven 3.9+, and PostgreSQL 16+.
+
+```bash
+createdb returnos
+cd backend-java
+cp .env.example .env                 # load variables into your shell
+mvn spring-boot:run                  # Flyway applies V1 and V2 automatically
+mvn test
+```
+
+`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET`,
+`PORT`, and `CORS_ORIGINS` are configured by environment. `JWT_SECRET` must be
+at least 32 characters. To import an existing SQLite database after Flyway has
+run, install `psycopg[binary]`, set `SQLITE_PATH` and `DATABASE_URL`, then run
+`python backend-java/tools/sqlite_to_postgres.py`. The importer preserves text
+IDs and copies common columns in SQLite dependency order; make a database
+backup first and import into a clean target.
 
 ```bash
 # 1. Backend — http://localhost:8080

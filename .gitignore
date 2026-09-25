@@ -36,3 +36,4 @@ frontend/e2e/screenshots/
 
 # Local scratch
 *.tsbuildinfo
+backend-java/.maven/
