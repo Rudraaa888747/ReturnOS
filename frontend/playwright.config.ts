@@ -2,9 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  // Reset the demo database first, so every run starts from the same seeded
-  // baseline instead of whatever the previous run left behind.
-  globalSetup: './e2e/global-setup.ts',
+  // Java/PostgreSQL target: the schema is wiped by global setup, then the
+  // backend below boots fresh and Flyway migrates V1..V7 (deterministic
+  // baseline, incl. demo seed). E2E specs use e2e/dbpg.ts for id lookups and
+  // clock nudges; every status change is written by backend code.
+  globalSetup: './e2e/global-setup-java.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -32,17 +34,23 @@ export default defineConfig({
       use: { ...devices['iPhone 12'] },
     },
   ],
-  // Two servers: the API with a fast real fulfillment lifecycle (every stage
-  // still written by backend code, just without the demo waiting periods), and
-  // the Vite dev server the browser talks to.
+  // Two servers: the Java API with a fast real fulfillment lifecycle (every
+  // stage still written by backend code, just without the demo waiting
+  // periods), and the Vite dev server the browser talks to.
   webServer: [
     {
-      command: 'npm run dev',
-      cwd: '../backend',
+      command: 'java -jar ../backend-java/target/returnos-backend-1.0.0.jar',
       url: 'http://localhost:8080/api/v1/meta/reasons',
-      reuseExistingServer: !process.env.CI,
-      timeout: 120000,
+      // Never reuse: the schema was just wiped by global setup, so the
+      // backend must boot fresh here for Flyway to migrate it.
+      timeout: 180000,
       env: {
+        DATABASE_URL: 'jdbc:postgresql://localhost:5433/returnos_e2e',
+        DATABASE_USERNAME: 'test',
+        DATABASE_PASSWORD: 'test',
+        JWT_SECRET: 'e2e-test-secret-with-at-least-thirty-two-characters',
+        PORT: '8080',
+        RETURNOS_FULFILL_TICK_MS: '1000',
         FULFILL_TICK_MS: '500',
         FULFILL_ORDER_MIN_CONFIRMED: '0',
         FULFILL_ORDER_MIN_PROCESSING: '0',

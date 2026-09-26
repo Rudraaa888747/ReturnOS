@@ -17,10 +17,6 @@ frontend/vite.pid
 
 node_modules/
 dist/
-backend/dist/
-backend/data/
-backend/uploads/
-backend/uploads-test/
 frontend/dist/
 
 # Test artifacts and reports

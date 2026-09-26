@@ -1,6 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { dbGet, dbAll, dbRun } from './dbpg.js';
 
 // ---------------------------------------------------------------------------
 // Phase 9 — the cross-system scenario (§56).
@@ -17,8 +16,6 @@ import path from 'path';
 // ---------------------------------------------------------------------------
 
 const SHOTS = 'e2e/screenshots';
-const dbPath = path.resolve(import.meta.dirname, '../../backend/data/returnos.db');
-const db = new Database(dbPath);
 
 const CUSTOMER = { email: 'rudrachokshi441@gmail.com', password: '123456' };
 const OPERATOR = { email: 'warehouse@returnos.test', password: 'Warehouse123' };
@@ -37,23 +34,21 @@ async function signIn(page: Page, who: { email: string; password: string }, expe
  * due. Only the clock is touched; every status change is still written by the
  * backend's own fulfillment code.
  */
-function nudgeOrderClock(orderNumber: string): void {
+async function nudgeOrderClock(orderNumber: string): Promise<void> {
   const long = new Date(Date.now() - 86_400_000).toISOString();
-  const row = db.prepare('SELECT id FROM orders WHERE order_number = ?').get(orderNumber) as { id: string };
-  db.prepare('UPDATE orders SET created_at = ? WHERE id = ?').run(long, row.id);
-  db.prepare('UPDATE order_events SET created_at = ? WHERE order_id = ?').run(long, row.id);
+  const row = await dbGet<{ id: string }>('SELECT id FROM orders WHERE order_number = ?', orderNumber);
+  if (!row) throw new Error(`Order ${orderNumber} not found`);
+  await dbRun('UPDATE orders SET created_at = ? WHERE id = ?', long, row.id);
+  await dbRun('UPDATE order_events SET created_at = ? WHERE order_id = ?', long, row.id);
 }
 
 async function waitForOrderStatus(orderNumber: string, status: string): Promise<void> {
   await expect
     .poll(
-      () => {
-        nudgeOrderClock(orderNumber);
-        return (
-          db.prepare('SELECT status FROM orders WHERE order_number = ?').get(orderNumber) as
-            | { status: string }
-            | undefined
-        )?.status;
+      async () => {
+        await nudgeOrderClock(orderNumber);
+        const row = await dbGet<{ status: string }>('SELECT status FROM orders WHERE order_number = ?', orderNumber);
+        return row?.status;
       },
       { timeout: 60_000, intervals: [500] },
     )
@@ -94,7 +89,9 @@ test.describe('customer → warehouse → admin', () => {
     const orderNumber = (orderHeading.match(/ORD-\d{4}-\d{4}/) as RegExpMatchArray)[0];
     await customerPage.screenshot({ path: `${SHOTS}/x1-customer-order.png`, fullPage: true });
 
-    const orderId = (db.prepare('SELECT id FROM orders WHERE order_number = ?').get(orderNumber) as { id: string }).id;
+    const orderRow = await dbGet<{ id: string }>('SELECT id FROM orders WHERE order_number = ?', orderNumber);
+    if (!orderRow) throw new Error(`Order ${orderNumber} not found`);
+    const orderId = orderRow.id;
 
     // ---- 2. ADMIN sees the order ----------------------------------------
     await signIn(adminPage, ADMIN, /\/admin(\/.*)?$/);
@@ -127,10 +124,11 @@ test.describe('customer → warehouse → admin', () => {
 
     const body = (await customerPage.locator('body').textContent()) ?? '';
     const returnNumber = (body.match(/RET-\d{4}-\d{4}/) as RegExpMatchArray)[0];
-    const returnRow = db.prepare('SELECT id, customer_id FROM returns WHERE return_number = ?').get(returnNumber) as {
-      id: string;
-      customer_id: string;
-    };
+    const returnRow = await dbGet<{ id: string; customer_id: string }>(
+      'SELECT id, customer_id FROM returns WHERE return_number = ?',
+      returnNumber,
+    );
+    if (!returnRow) throw new Error(`Return ${returnNumber} not found`);
     await customerPage.screenshot({ path: `${SHOTS}/x3-customer-return.png`, fullPage: true });
 
     // ---- 5. ADMIN sees the return, still unprocessed ---------------------
@@ -165,13 +163,10 @@ test.describe('customer → warehouse → admin', () => {
     };
 
     const returnState = () =>
-      db.prepare('SELECT status, approved_at FROM returns WHERE id = ?').get(returnRow.id) as {
-        status: string;
-        approved_at: string | null;
-      };
+      dbGet<{ status: string; approved_at: string | null }>('SELECT status, approved_at FROM returns WHERE id = ?', returnRow.id);
 
     // ---- 7. Approve and receive -----------------------------------------
-    if (returnState().approved_at === null) {
+    if ((await returnState())?.approved_at === null) {
       const approved = await api('POST', `/returns/${returnRow.id}/approve`, {});
       expect(approved.status, `approve failed: ${JSON.stringify(approved.body)}`).toBe(200);
     }
@@ -182,7 +177,7 @@ test.describe('customer → warehouse → admin', () => {
       notes: 'Cross-system scenario parcel.',
     });
     expect(received.status, `receive failed: ${JSON.stringify(received.body)}`).toBe(201);
-    expect(returnState().status).toBe('RECEIVED');
+    expect((await returnState())?.status).toBe('RECEIVED');
 
     // ---- 8. ADMIN sees the warehouse processing -------------------------
     await adminPage.reload();
@@ -193,9 +188,9 @@ test.describe('customer → warehouse → admin', () => {
     const started = await api('POST', `/returns/${returnRow.id}/inspection/start`, {});
     expect(started.status, `inspection start failed: ${JSON.stringify(started.body)}`).toBe(201);
 
-    const returnItemId = (
-      db.prepare('SELECT id FROM return_items WHERE return_id = ?').get(returnRow.id) as { id: string }
-    ).id;
+    const returnItemRow = await dbGet<{ id: string }>('SELECT id FROM return_items WHERE return_id = ?', returnRow.id);
+    if (!returnItemRow) throw new Error(`No return items for ${returnRow.id}`);
+    const returnItemId = returnItemRow.id;
     const completed = await api('POST', `/returns/${returnRow.id}/inspection/complete`, {
       findings: [
         { returnItemId, result: 'PASS', productCondition: 'LIKE_NEW', packagingCondition: 'NEW', quantity: 1 },
@@ -209,11 +204,12 @@ test.describe('customer → warehouse → admin', () => {
     await adminPage.screenshot({ path: `${SHOTS}/x7-admin-inspection.png`, fullPage: true });
 
     // ---- 10. Disposition releases the store credit ----------------------
-    const creditBefore = (
-      db
-        .prepare('SELECT COALESCE(SUM(amount_paise), 0) AS total FROM store_credit_ledger WHERE user_id = ?')
-        .get(returnRow.customer_id) as { total: number }
-    ).total;
+    const creditBeforeRow = await dbGet<{ total: number | string }>(
+      'SELECT COALESCE(SUM(amount_paise), 0) AS total FROM store_credit_ledger WHERE user_id = ?',
+      returnRow.customer_id,
+    );
+    // node-pg returns SUM(..) as a NUMERIC string; coerce for arithmetic.
+    const creditBefore = Number(creditBeforeRow?.total ?? 0);
 
     const disposition = await api('POST', `/returns/${returnRow.id}/disposition`, {
       returnItemId,
@@ -230,16 +226,17 @@ test.describe('customer → warehouse → admin', () => {
     ).toBe(true);
 
     // ---- 11. The money actually moved, once ------------------------------
-    const ledger = db
-      .prepare("SELECT amount_paise FROM store_credit_ledger WHERE reference_type = 'RETURN' AND reference_id = ?")
-      .all(returnRow.id) as Array<{ amount_paise: number }>;
+    const ledger = await dbAll<{ amount_paise: number }>(
+      "SELECT amount_paise FROM store_credit_ledger WHERE reference_type = 'RETURN' AND reference_id = ?",
+      returnRow.id,
+    );
     expect(ledger, 'exactly one credit entry for this return').toHaveLength(1);
 
-    const creditAfter = (
-      db
-        .prepare('SELECT COALESCE(SUM(amount_paise), 0) AS total FROM store_credit_ledger WHERE user_id = ?')
-        .get(returnRow.customer_id) as { total: number }
-    ).total;
+    const creditAfterRow = await dbGet<{ total: number | string }>(
+      'SELECT COALESCE(SUM(amount_paise), 0) AS total FROM store_credit_ledger WHERE user_id = ?',
+      returnRow.customer_id,
+    );
+    const creditAfter = Number(creditAfterRow?.total ?? 0);
     expect(creditAfter).toBe(creditBefore + ledger[0].amount_paise);
 
     // ---- 12. ADMIN sees the resolution and the credit --------------------
@@ -260,9 +257,11 @@ test.describe('customer → warehouse → admin', () => {
     await expect(adminPage.locator('h1').first()).toBeVisible();
     await adminPage.screenshot({ path: `${SHOTS}/x10-admin-inventory.png`, fullPage: true });
 
-    const movements = db
-      .prepare("SELECT reason FROM inventory_movements WHERE reference_id = ? OR reference_id = ?")
-      .all(returnRow.id, returnItemId) as Array<{ reason: string }>;
+    const movements = await dbAll<{ reason: string }>(
+      'SELECT reason FROM inventory_movements WHERE reference_id = ? OR reference_id = ?',
+      returnRow.id,
+      returnItemId,
+    );
     const reasons = movements.map((row) => row.reason);
     expect(reasons, 'the goods movement should be on the ledger').toContain('RETURN_RECEIVED');
     expect(reasons).toContain('RESTOCK');
@@ -273,9 +272,10 @@ test.describe('customer → warehouse → admin', () => {
     await adminPage.screenshot({ path: `${SHOTS}/x11-admin-audit.png`, fullPage: true });
 
     // The warehouse trail recorded who did what, independently of admin.
-    const trail = db
-      .prepare("SELECT action FROM audit_log WHERE entity_type = 'RETURN' AND entity_id = ?")
-      .all(returnRow.id) as Array<{ action: string }>;
+    const trail = await dbAll<{ action: string }>(
+      "SELECT action FROM audit_log WHERE entity_type = 'RETURN' AND entity_id = ?",
+      returnRow.id,
+    );
     const actions = trail.map((row) => row.action);
     expect(actions).toContain('RETURN_RECEIVED');
     expect(actions).toContain('INSPECTION_COMPLETED');

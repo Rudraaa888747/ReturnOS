@@ -185,9 +185,9 @@ same flat bordered panels, same motion discipline. No second design language.
 - **Return detail answers four questions:** what happened, what is happening
   now, what happens next, anything needed from the customer — derived from
   backend status, not hardcoded copy.
-- **Backend:** Express + SQLite (`backend/`), layered routes → store →
-  better-sqlite3, zod validation, JWT (`CUSTOMER` role), ownership enforced
-  per-row with 404-on-foreign (no existence leaks), consistent
-  `{code, message, errors?}` error shape, multer evidence uploads (JPG/PNG/
-  WebP/PDF, 5 MB, ownership-checked download only — uploads are never served
-  statically). `FRONTEND_DIST` enables single-origin production serving.
+- **Backend:** Java + Spring Boot + PostgreSQL (`backend-java/`), layered
+  controllers → services → JDBC, bean validation, JWT (`CUSTOMER` role),
+  ownership enforced per-row with 404-on-foreign (no existence leaks),
+  consistent `{code, message, errors?}` error shape, evidence uploads
+  (JPG/PNG/WebP/PDF, 5 MB, ownership-checked download only — uploads are
+  never served statically). Flyway owns the schema (V1..V7).

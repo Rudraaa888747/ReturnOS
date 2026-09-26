@@ -63,23 +63,22 @@ sees everything and writes almost nothing — deliberately.
                  │                 │                 │
                  └────────── React 19 / Vite ─────────┘
                                    │
-                    Express 4 + TypeScript (current reference)
+                    Java 21 + Spring Boot (/api/v1)
                                    │
-                 ┌─────────────────┴─────────────────┐
-                 │   store.ts · warehouse/ · admin/  │
-                 │   ← all business logic lives here │
-                 └─────────────────┬─────────────────┘
+                  ┌────────────────┴──────────────────┐
+                  │  controllers · services · scheduler │
+                  │  ← all business logic lives here  │
+                  └────────────────┬──────────────────┘
                                    │
-                          SQLite (better-sqlite3)
+                        PostgreSQL (Flyway V1..V7)
 ```
 
 | | |
 |---|---|
-| **Backend** | Express 4, TypeScript (ESM), better-sqlite3 (synchronous), Zod, JWT + bcrypt |
-| **Java migration** | `backend-java/`: Java 21, Spring Boot, Spring Security, JDBC, PostgreSQL, Flyway, JWT + BCrypt |
+| **Backend** | Java 21, Spring Boot, Spring Security, JDBC, PostgreSQL, Flyway, JWT + BCrypt |
 | **Frontend** | React 19, Vite 8, react-router 7, CSS Modules + design tokens, lucide-react |
-| **Tests** | vitest + supertest (backend), vitest + Testing Library (frontend), Playwright (e2e) |
-| **Schema** | No migration files. `initSchema()` runs idempotent `CREATE TABLE IF NOT EXISTS` plus guarded `ALTER TABLE` checks |
+| **Tests** | JUnit + Spring Boot + PostgreSQL (backend), vitest + Testing Library (frontend), Playwright (e2e) |
+| **Schema** | Flyway migrations `backend-java/src/main/resources/db/migration/V1..V7` |
 | **Money** | Integer paise everywhere (`*_paise` columns). Never floats |
 
 The frontend performs **no business logic and no financial writes**. Every
@@ -89,41 +88,24 @@ price, total, eligibility decision and status transition comes from the server.
 
 ## Quick start
 
-Requires Node 20+.
-
-### Java/PostgreSQL migration backend
-
-The original backend is deliberately retained while parity work is in progress.
-The Java service lives in `backend-java` and uses PostgreSQL rather than the
-SQLite file. It requires Java 21, Maven 3.9+, and PostgreSQL 16+.
+Requires Java 21, Maven 3.9+ (wrapper included), PostgreSQL 16+, Node 20+.
 
 ```bash
+# 1. Database
 createdb returnos
+
+# 2. Backend — http://localhost:8080 (Flyway migrates V1..V7 automatically,
+#    incl. the demo catalogue, users and orders)
 cd backend-java
-cp .env.example .env                 # load variables into your shell
-mvn spring-boot:run                  # Flyway applies V1 and V2 automatically
-mvn test
-```
-
-`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET`,
-`PORT`, and `CORS_ORIGINS` are configured by environment. `JWT_SECRET` must be
-at least 32 characters. To import an existing SQLite database after Flyway has
-run, install `psycopg[binary]`, set `SQLITE_PATH` and `DATABASE_URL`, then run
-`python backend-java/tools/sqlite_to_postgres.py`. The importer preserves text
-IDs and copies common columns in SQLite dependency order; make a database
-backup first and import into a clean target.
-
-```bash
-# 1. Backend — http://localhost:8080
-cd backend
-npm install
-cp .env.example .env     # then set JWT_SECRET to anything for local dev
-npm run seed             # creates the demo catalogue, users and orders
-npm run dev
+export DATABASE_URL=jdbc:postgresql://localhost:5432/returnos
+export DATABASE_USERNAME=returnos DATABASE_PASSWORD=returnos
+export JWT_SECRET=<at-least-32-characters> PORT=8080
+./mvnw.cmd spring-boot:run        # Windows
+./mvnw spring-boot:run            # Linux/macOS
 ```
 
 ```bash
-# 2. Frontend — http://localhost:5173 (proxies /api to :8080)
+# 3. Frontend — http://localhost:5173 (proxies /api to :8080)
 cd frontend
 npm install
 npm run dev
@@ -132,32 +114,47 @@ npm run dev
 Open <http://localhost:5173> and sign in with one of the accounts below. The
 app routes you to the right module based on your role.
 
+To import an existing SQLite database after Flyway has run, set
+`SQLITE_PATH` and `DATABASE_URL`, then run
+`python backend-java/tools/sqlite_to_postgres.py`. The importer preserves text
+IDs and copies common columns in SQLite dependency order; make a database
+backup first and import into a clean target.
+
 ### Useful scripts
 
 | Command | Where | What it does |
 |---|---|---|
-| `npm run dev` | both | Dev server with reload |
-| `npm test` | both | Unit/integration tests |
-| `npm run test:e2e` | frontend | Playwright suite |
-| `npm run build` | both | Production build |
-| `npm run seed` | backend | Seed catalogue, users, demo orders |
-| `npm run trim:orders` | backend | **Reset the demo database to its seeded baseline** |
+| `./mvnw.cmd spring-boot:run` | backend-java | Dev server with reload |
+| `./mvnw.cmd test` | backend-java | Integration tests (needs PostgreSQL, see below) |
+| `./mvnw.cmd package -DskipTests` | backend-java | Production jar (`target/returnos-backend-1.0.0.jar`) |
+| `npm run dev` | frontend | Vite dev server |
+| `npm test` | frontend | Unit tests |
+| `npm run test:e2e` | frontend | Playwright suite (starts Java + Vite itself) |
+| `npm run build` | frontend | Production build |
 | `npm run lint` | frontend | oxlint |
 
-`trim:orders` is the reset button. It removes development orders, restores
-catalogue stock, and puts the seeded demo return back under inspection. The
-Playwright suite runs it automatically before every run, so **running e2e tests
-will reset your demo data**.
+Backend tests need PostgreSQL: either Testcontainers (default) or an
+externally provided database via `TEST_DB_URL` / `TEST_DB_USERNAME` /
+`TEST_DB_PASSWORD`:
+
+```bash
+docker run -d --name returnos-test-pg -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=returnos_test -p 5433:5432 postgres:16-alpine
+$env:TEST_DB_URL="jdbc:postgresql://localhost:5433/returnos_test"; $env:TEST_DB_USERNAME="test"; $env:TEST_DB_PASSWORD="test"; .\mvnw.cmd test
+```
+
+The Playwright suite resets its own database (`returnos_e2e` on port 5433
+by default, see `frontend/e2e/global-setup-java.ts`) before every run, so
+**running e2e tests will reset the E2E data** — never point it at prod.
 
 ---
 
 ## Demo accounts
 
-Created by `npm run seed`.
+Seeded by Flyway migration `V7__demo_seed.sql` on every fresh database.
 
 | Role | Email | Password |
 |---|---|---|
-| Customer | see `backend/src/seed.ts` | `123456` |
+| Customer | `rudrachokshi441@gmail.com` | `123456` |
 | Warehouse | `warehouse@returnos.test` | `Warehouse123` |
 | Admin | `admin@returnos.test` | `Admin123` |
 
@@ -205,10 +202,11 @@ These are the parts that are easy to get wrong, and the reasoning behind how
 they work.
 
 ### One resolution engine
-`resolveReturnAtResolved()` in `store.ts` is the **only** code that issues store
-credit, completes a refund, or creates a replacement/exchange order. The
-warehouse and admin modules call it; neither reimplements it. A second
-implementation would be a second source of financial truth.
+`ReturnService` (`backend-java/.../returns/ReturnService.java`) is the
+**only** code that issues store credit, completes a refund, or creates a
+replacement/exchange order. The warehouse and admin modules call it; neither
+reimplements it. A second implementation would be a second source of
+financial truth.
 
 ### Approval is independent of status
 `returns.approved_at` is a separate stamp, not a status value. Receiving a
@@ -234,10 +232,11 @@ A retried request conflicts instead of double-applying.
 ### Two stock numbers that cannot drift
 `products.stock` is what the storefront sells from. `inventory_buckets` with
 `state = 'AVAILABLE'` is what the warehouse counts as sellable. They must always
-agree, so **both are written in a single transaction** by `applyMovement()`, and
-checkout routes its decrement through the same engine. If the bucket ever comes
-up short it is clamped — and the clamp is recorded as
-`WARNING_INVENTORY_CLAMPED`, because a silent clamp hides real drift.
+agree, so **both are written in a single transaction** by the movement engine
+in `WarehouseService`, and checkout routes its decrement through the same
+engine. If the bucket ever comes up short it is clamped — and the clamp is
+recorded as `WARNING_INVENTORY_CLAMPED`, because a silent clamp hides real
+drift.
 
 ### Roles are read from the database, never from the token
 The JWT carries a role claim, but every request re-reads the role and the
@@ -253,7 +252,7 @@ design — but an admin token still gets 403 on `/warehouse/*` and on the
 customer API. Breadth of visibility is not a universal key.
 
 ### The scheduler stops at IN_TRANSIT
-`fulfillment.ts` simulates the carrier leg only. Everything from `RECEIVED`
+`FulfillmentService` simulates the carrier leg only. Everything from `RECEIVED`
 onward is driven by real operator actions. Without that boundary the timer
 would receive and resolve returns before anyone touched them.
 
@@ -301,14 +300,15 @@ Admin adds `categories`, `settings`, `notification_templates` and its own
 
 ## API surface
 
-All routes are under `/api/v1`. Roughly 120 endpoints:
+All routes are under `/api/v1`. 121 endpoints:
 
 | Group | Count | Auth |
 |---|---|---|
 | `/auth` | 5 | public |
-| Customer (`/products`, `/cart`, `/checkout`, `/orders`, `/returns`, `/credit`, `/addresses`, `/profile`, `/support`, …) | ~47 | `CUSTOMER` |
+| Customer storefront (`/products`, `/cart`, `/checkout`, `/orders`, `/returns`, `/credit`, `/addresses`, `/profile`, `/support`, …) | ~43 | `CUSTOMER` |
 | `/warehouse/*` | 18 | `WAREHOUSE` + site scope |
-| `/admin/*` | 56 | `ADMIN` |
+| `/admin/*` | 54 | `ADMIN` |
+| Health (`/api/health`) | 1 | public |
 
 Errors are always `{ code, message, errors? }` — machine-readable codes like
 `ALREADY_RECEIVED`, `DISPOSITION_NOT_ALLOWED`, `INSUFFICIENT_INVENTORY`,
@@ -319,19 +319,18 @@ Errors are always `{ code, message, errors? }` — machine-readable codes like
 ## Testing
 
 ```bash
-cd backend  && npm test      # 521 tests, 25 files
-cd frontend && npm test      #  28 tests,  5 files
-cd frontend && npm run test:e2e   # 37 Playwright tests
+cd backend-java && .\mvnw.cmd test   # 32 tests, 8 classes (needs PostgreSQL, see above)
+cd frontend && npm test               # 28 tests, 5 files
+cd frontend && npm run test:e2e       # 37 Playwright tests vs Java + PostgreSQL
 ```
 
 The suites are built around the failure modes that actually matter:
 
 - **Authorization matrix** — every admin endpoint against every role (admin,
-  warehouse, customer, anonymous, forged token), with the route table asserted
-  against the live Express router, so a new endpoint that nobody covers fails
-  the suite.
-- **Instant revocation** — a live session with a still-valid token loses access
-  on the very next request after the account is disabled.
+  warehouse, customer, anonymous, forged token), with instant revocation: a
+  live session with a still-valid token loses access on the very next request
+  after the account is disabled (roles are re-read from the database, never
+  trusted from the token).
 - **Money invariants** — store credit issued exactly once; a refund resolution
   issues no credit; interleaved restock-and-sale cannot make the two stock
   numbers drift; a failed movement rolls back both writes.
@@ -341,25 +340,32 @@ The suites are built around the failure modes that actually matter:
   warehouse floor, verified as visible in Admin, in three separate browser
   contexts.
 
-Playwright resets the demo database before each run, so tests read a known
-baseline instead of whatever the previous run left behind.
+Playwright wipes and reseeds its own PostgreSQL database before each run
+(`e2e/global-setup-java.ts` + Flyway), so tests read a known baseline
+instead of whatever the previous run left behind.
 
 ---
 
 ## Project layout
 
 ```
-backend/
-  src/
-    routes/          HTTP layer — validation, status codes, no business rules
-    store.ts         Customer domain + the resolution engine
-    warehouse/       schema, inventory, operations, tasks, analytics, audit
-    admin/           permissions, readers, catalog, finance, sites, users, reports
-    db.ts            Schema creation and migrations
-    fulfillment.ts   Carrier-leg simulation (stops at IN_TRANSIT)
-    seed.ts          Demo catalogue, users, orders
-  scripts/
-    trim-demo-orders.ts   Reset to the seeded baseline
+backend-java/
+  src/main/java/com/returnos/
+    auth/            JWT, security filter, login/signup/reset
+    commerce/        products, cart
+    orders/          quote, checkout, order detail, tracking
+    customer/        profile, addresses, credit, notifications
+    returns/         returns, timelines, cancel, public tracking
+    fulfillment/     carrier-leg scheduler (stops at IN_TRANSIT)
+    warehouse/       queue, receive, inspection, disposition, inventory, tasks
+    admin/           reads, writes, catalog, finance, sites, reports
+    care/            documents, uploads, support tickets, feedback
+    common/          health, meta, error contract
+  src/main/resources/db/migration/
+    V1..V7           Flyway schema + operational/demo seed
+  src/test/          8 integration test classes (PostgreSQL-backed)
+  tools/
+    sqlite_to_postgres.py   One-off SQLite → PostgreSQL importer
 
 frontend/
   src/
@@ -367,7 +373,7 @@ frontend/
     pages/warehouse/ Queue, receiving, inspection, disposition, inventory, tasks
     pages/admin/     26 pages across the admin console
     lib/             API clients, session, cart provider
-  e2e/               Playwright specs
+  e2e/               Playwright specs (+ dbpg.ts PostgreSQL helper)
 ```
 
 The warehouse and admin consoles share one visual language

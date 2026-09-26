@@ -81,18 +81,25 @@ Checkout 5, Returns 2, Warehouse 6). Fixes since 2026-09-24:
   ORD-2026-1001..1003 + demo return RET-2026-0841, `return_counter=841`.
 
 Frontend: `npm run test` (vitest) **28/28 pass**. Playwright vs Java
-(`frontend/playwright.java.config.ts`, fresh `returnos_e2e` per run):
-**30/30 pass on chromium** (`routes`, `admin-nav`,
-`warehouse-responsive`). Mobile: admin-nav nav-visibility assertions
-fail identically vs Node (pre-existing responsive limitation, not a
-backend difference); `routes` on mobile-safari flakes on both backends
-(WebKit cancels in-flight fetches on `page.goto`; the spec records the
-resulting pageerrors — verified identical failure vs Node, untouched).
+(base `frontend/playwright.config.ts`, `returnos_e2e` on port 5433):
+**37/37 pass on chromium** — all 7 spec files, incl. the 4 formerly
+SQLite-coupled specs (`customer-journey`, `admin-cross-system`,
+`admin-responsive`, `warehouse-tasks-actions`), migrated to PostgreSQL via
+`frontend/e2e/dbpg.ts` (same assertions, same intent; `SUM()` numerics
+coerced). Mobile: admin-nav nav-visibility assertions fail identically vs
+the old Node backend (pre-existing responsive limitation, not a backend
+difference); `routes` on mobile-safari flakes on both backends (WebKit
+cancels in-flight fetches on `page.goto`; the spec records the resulting
+pageerrors — untouched).
 
-Remaining blockers (not Java defects):
-- 4 E2E specs (`customer-journey`, `admin-cross-system`,
-  `admin-responsive`, `warehouse-tasks-actions`) open the Node SQLite
-  file directly via better-sqlite3 and cannot run against Postgres
-  without rewriting them (forbidden). They need a PG-capable harness.
-- E2E reruns need a fresh DB (`DROP/CREATE returnos_e2e`; Flyway seeds
-  it on boot). No automated reset hook exists for the Java target.
+E2E reset is automated: `frontend/e2e/global-setup-java.ts` wipes the E2E
+schema before each run and the Playwright-managed Java backend recreates it
+via Flyway on boot (deterministic V1..V7 baseline incl. demo seed). Only
+ever touches the E2E database — never prod.
+
+## Backend replacement (final)
+
+The TypeScript/Express/SQLite backend (`backend/`) has been removed. The
+only backend is Java/Spring Boot + PostgreSQL; the only database authority
+is Flyway. `backend-java/tools/sqlite_to_postgres.py` is retained as a
+one-off importer for existing SQLite data.

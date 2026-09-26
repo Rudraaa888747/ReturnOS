@@ -1,6 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { dbGet } from './dbpg.js';
 
 // ---------------------------------------------------------------------------
 // Phase 9 — admin layouts at 1440 / 1280 / 1024 / 768.
@@ -10,7 +9,6 @@ import path from 'path';
 // ---------------------------------------------------------------------------
 
 const SHOTS = 'e2e/screenshots';
-const db = new Database(path.resolve(import.meta.dirname, '../../backend/data/returnos.db'));
 
 const VIEWPORTS = [
   { name: '1440', width: 1440, height: 900 },
@@ -43,9 +41,7 @@ test.describe('admin responsive layouts', () => {
 
     // A real return, so the detail page is exercised with data rather than an
     // empty state.
-    const ret = db.prepare('SELECT id FROM returns ORDER BY created_at DESC LIMIT 1').get() as
-      | { id: string }
-      | undefined;
+    const ret = await dbGet<{ id: string }>('SELECT id FROM returns ORDER BY created_at DESC LIMIT 1');
     expect(ret, 'a seeded return is needed for the detail layout check').toBeDefined();
 
     const pages = [

@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { dbGet, dbRun } from './dbpg.js';
 
 // ---------------------------------------------------------------------------
 // Floor task actions, clicked for real: claim -> complete, block with and
@@ -10,31 +9,26 @@ import path from 'path';
 // floor specs.
 // ---------------------------------------------------------------------------
 
-const dbPath = path.resolve(import.meta.dirname, '../../backend/data/returnos.db');
-const db = new Database(dbPath);
-
 const LONG_AGO = new Date(Date.now() - 86_400_000).toISOString();
 const SHOTS = 'e2e/screenshots';
 
-function nudgeOrderClock(orderNumber: string): void {
-  const row = db.prepare('SELECT id FROM orders WHERE order_number = ?').get(orderNumber) as { id: string } | undefined;
+async function nudgeOrderClock(orderNumber: string): Promise<void> {
+  const row = await dbGet<{ id: string }>('SELECT id FROM orders WHERE order_number = ?', orderNumber);
   if (!row) throw new Error(`Order ${orderNumber} not found`);
-  db.prepare('UPDATE orders SET created_at = ? WHERE id = ?').run(LONG_AGO, row.id);
-  db.prepare('UPDATE order_events SET created_at = ? WHERE order_id = ?').run(LONG_AGO, row.id);
+  await dbRun('UPDATE orders SET created_at = ? WHERE id = ?', LONG_AGO, row.id);
+  await dbRun('UPDATE order_events SET created_at = ? WHERE order_id = ?', LONG_AGO, row.id);
 }
 
-function nudgeReturnClock(returnId: string): void {
-  db.prepare('UPDATE returns SET updated_at = ? WHERE id = ?').run(LONG_AGO, returnId);
+async function nudgeReturnClock(returnId: string): Promise<void> {
+  await dbRun('UPDATE returns SET updated_at = ? WHERE id = ?', LONG_AGO, returnId);
 }
 
 async function waitForReturnStatus(returnId: string, status: string): Promise<void> {
   await expect
     .poll(
-      () => {
-        nudgeReturnClock(returnId);
-        const row = db.prepare('SELECT status FROM returns WHERE id = ?').get(returnId) as
-          | { status: string }
-          | undefined;
+      async () => {
+        await nudgeReturnClock(returnId);
+        const row = await dbGet<{ status: string }>('SELECT status FROM returns WHERE id = ?', returnId);
         return row?.status;
       },
       { timeout: 120_000, intervals: [500] },
@@ -45,11 +39,9 @@ async function waitForReturnStatus(returnId: string, status: string): Promise<vo
 async function waitForOrderStatus(orderNumber: string, status: string): Promise<void> {
   await expect
     .poll(
-      () => {
-        nudgeOrderClock(orderNumber);
-        const row = db.prepare('SELECT status FROM orders WHERE order_number = ?').get(orderNumber) as
-          | { status: string }
-          | undefined;
+      async () => {
+        await nudgeOrderClock(orderNumber);
+        const row = await dbGet<{ status: string }>('SELECT status FROM orders WHERE order_number = ?', orderNumber);
         return row?.status;
       },
       { timeout: 120_000, intervals: [500] },
@@ -160,10 +152,11 @@ test('floor tasks: claim, complete, and block with a reason', async ({ page, bro
   await expect(rowA).toBeVisible({ timeout: 15000 });
   await rowA.getByRole('button', { name: 'Claim' }).click();
   await expect(rowA.getByText('IN PROGRESS')).toBeVisible();
-  const assignee = db
-    .prepare("SELECT assigned_to FROM warehouse_tasks WHERE title LIKE '%' || ? || '%' AND kind = 'RECEIVE_RETURN' ORDER BY created_at DESC LIMIT 1")
-    .get(first.returnNumber) as { assigned_to: string | null };
-  expect(assignee.assigned_to).toBe('u-wh-operator');
+  const assignee = await dbGet<{ assigned_to: string | null }>(
+    "SELECT assigned_to FROM warehouse_tasks WHERE title LIKE '%' || ? || '%' AND kind = 'RECEIVE_RETURN' ORDER BY created_at DESC LIMIT 1",
+    first.returnNumber,
+  );
+  expect(assignee?.assigned_to).toBe('u-wh-operator');
 
   // ---- Complete it ------------------------------------------------------
   await rowA.getByRole('button', { name: 'Done' }).click();

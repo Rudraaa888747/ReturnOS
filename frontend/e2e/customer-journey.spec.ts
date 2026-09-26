@@ -1,6 +1,5 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { dbGet, dbAll, dbRun } from './dbpg.js';
 
 // ---------------------------------------------------------------------------
 // End-to-end lifecycle, warehouse-driven:
@@ -21,9 +20,6 @@ import path from 'path';
 // Chromium-only: four full lifecycles are too heavy to repeat per browser.
 // ---------------------------------------------------------------------------
 
-const dbPath = path.resolve(import.meta.dirname, '../../backend/data/returnos.db');
-const db = new Database(dbPath);
-
 const LONG_AGO = new Date(Date.now() - 86_400_000).toISOString();
 const SHOTS = 'e2e/screenshots';
 
@@ -32,22 +28,20 @@ async function shot(page: Page, name: string): Promise<void> {
 }
 
 /** Backdate an order's stage clock so the scheduler treats its next stage as due. */
-function nudgeOrderClock(orderNumber: string): void {
-  const row = db.prepare('SELECT id FROM orders WHERE order_number = ?').get(orderNumber) as { id: string } | undefined;
+async function nudgeOrderClock(orderNumber: string): Promise<void> {
+  const row = await dbGet<{ id: string }>('SELECT id FROM orders WHERE order_number = ?', orderNumber);
   if (!row) throw new Error(`Order ${orderNumber} not found`);
-  db.prepare('UPDATE orders SET created_at = ? WHERE id = ?').run(LONG_AGO, row.id);
-  db.prepare('UPDATE order_events SET created_at = ? WHERE order_id = ?').run(LONG_AGO, row.id);
+  await dbRun('UPDATE orders SET created_at = ? WHERE id = ?', LONG_AGO, row.id);
+  await dbRun('UPDATE order_events SET created_at = ? WHERE order_id = ?', LONG_AGO, row.id);
 }
 
 /** Poll the database until the backend has advanced the order to `status`. */
 async function waitForOrderStatus(orderNumber: string, status: string): Promise<void> {
   await expect
     .poll(
-      () => {
-        nudgeOrderClock(orderNumber);
-        const row = db.prepare('SELECT status FROM orders WHERE order_number = ?').get(orderNumber) as
-          | { status: string }
-          | undefined;
+      async () => {
+        await nudgeOrderClock(orderNumber);
+        const row = await dbGet<{ status: string }>('SELECT status FROM orders WHERE order_number = ?', orderNumber);
         return row?.status;
       },
       { timeout: 120_000, intervals: [500] },
@@ -55,18 +49,21 @@ async function waitForOrderStatus(orderNumber: string, status: string): Promise<
     .toBe(status);
 }
 
-function orderIdOf(orderNumber: string): string {
-  const row = db.prepare('SELECT id FROM orders WHERE order_number = ?').get(orderNumber) as { id: string };
+async function orderIdOf(orderNumber: string): Promise<string> {
+  const row = await dbGet<{ id: string }>('SELECT id FROM orders WHERE order_number = ?', orderNumber);
+  if (!row) throw new Error(`Order ${orderNumber} not found`);
   return row.id;
 }
 
-function orderItemIdOf(orderId: string): string {
-  const row = db.prepare('SELECT id FROM order_items WHERE order_id = ?').get(orderId) as { id: string };
+async function orderItemIdOf(orderId: string): Promise<string> {
+  const row = await dbGet<{ id: string }>('SELECT id FROM order_items WHERE order_id = ?', orderId);
+  if (!row) throw new Error(`Order items for ${orderId} not found`);
   return row.id;
 }
 
-function returnIdOf(returnNumber: string): string {
-  const row = db.prepare('SELECT id FROM returns WHERE return_number = ?').get(returnNumber) as { id: string };
+async function returnIdOf(returnNumber: string): Promise<string> {
+  const row = await dbGet<{ id: string }>('SELECT id FROM returns WHERE return_number = ?', returnNumber);
+  if (!row) throw new Error(`Return ${returnNumber} not found`);
   return row.id;
 }
 
@@ -242,8 +239,8 @@ test('warehouse-driven lifecycle: credit, refund, replacement, exchange', async 
   // ---- One order with four units feeds all four resolution paths --------
   const productName = await addFirstProductToCart(page, 4);
   const orderNumber = await checkout(page, { useCredit: false });
-  const orderId = orderIdOf(orderNumber);
-  const itemId = orderItemIdOf(orderId);
+  const orderId = await orderIdOf(orderNumber);
+  const itemId = await orderItemIdOf(orderId);
   await shot(page, 'journey-order-placed');
 
   await page.goto('/customer/orders');
@@ -272,18 +269,17 @@ test('warehouse-driven lifecycle: credit, refund, replacement, exchange', async 
 
     // The customer sees the outcome with no manual refresh assumptions:
     // every check below navigates fresh.
-    await page.goto(`/customer/returns/${returnIdOf(returnNumber)}`);
+    await page.goto(`/customer/returns/${await returnIdOf(returnNumber)}`);
     await expect(page.locator('body')).toContainText('RESOLVED');
     await shot(page, `journey-customer-sees-${leg.tag}`);
   }
 
   // ---- Store credit landed exactly once and is spendable ------------------
-  const creditRow = db
-    .prepare(
-      `SELECT amount_paise FROM store_credit_ledger WHERE reference_type = 'RETURN'
+  const creditRow = await dbAll<{ amount_paise: number }>(
+    `SELECT amount_paise FROM store_credit_ledger WHERE reference_type = 'RETURN'
         AND reference_id IN (SELECT id FROM returns WHERE order_id = ?)`,
-    )
-    .all(orderIdOf(orderNumber)) as Array<{ amount_paise: number }>;
+    await orderIdOf(orderNumber),
+  );
   expect(creditRow).toHaveLength(1);
   expect(creditRow[0].amount_paise).toBeGreaterThan(0);
 
@@ -296,12 +292,13 @@ test('warehouse-driven lifecycle: credit, refund, replacement, exchange', async 
   expect(balanceText).not.toBe('₹0');
 
   // ---- Refund completed on the return file --------------------------------
-  const refundNumber = (
-    db.prepare(`SELECT return_number FROM returns WHERE order_id = ? AND resolution_type = 'REFUND'`).get(orderIdOf(orderNumber)) as {
-      return_number: string;
-    }
-  ).return_number;
-  await page.goto(`/customer/returns/${returnIdOf(refundNumber)}`);
+  const refundRow = await dbGet<{ return_number: string }>(
+    `SELECT return_number FROM returns WHERE order_id = ? AND resolution_type = 'REFUND'`,
+    await orderIdOf(orderNumber),
+  );
+  if (!refundRow) throw new Error('Expected a REFUND return for the order');
+  const refundNumber = refundRow.return_number;
+  await page.goto(`/customer/returns/${await returnIdOf(refundNumber)}`);
   const resolution = page.locator('section', { has: page.locator('h2', { hasText: 'Resolution' }) });
   await expect(resolution.getByText('Refund kind')).toBeVisible();
   // The Status dd sits right after its dt; the section also has a
@@ -310,12 +307,15 @@ test('warehouse-driven lifecycle: credit, refund, replacement, exchange', async 
 
   // ---- Replacement and exchange ship as linked zero-value orders ----------
   for (const kind of ['REPLACEMENT', 'EXCHANGE'] as const) {
-    const linked = db
-      .prepare('SELECT order_number FROM orders WHERE kind = ? AND customer_id = (SELECT customer_id FROM orders WHERE order_number = ?)')
-      .get(kind, orderNumber) as { order_number: string };
+    const linked = await dbGet<{ order_number: string }>(
+      'SELECT order_number FROM orders WHERE kind = ? AND customer_id = (SELECT customer_id FROM orders WHERE order_number = ?)',
+      kind,
+      orderNumber,
+    );
+    if (!linked) throw new Error(`Expected a linked ${kind} order`);
     await page.goto('/customer/orders');
     await expect(page.locator(`text=${linked.order_number}`).first()).toBeVisible();
-    const linkedId = orderIdOf(linked.order_number);
+    const linkedId = await orderIdOf(linked.order_number);
     await page.goto(`/customer/orders/${linkedId}`);
     await expect(page.locator('body')).toContainText(productName);
     await expect(page.locator('body')).toContainText('₹0');
@@ -329,9 +329,11 @@ test('warehouse-driven lifecycle: credit, refund, replacement, exchange', async 
   // ---- Spend the credit on a new order ------------------------------------
   await addFirstProductToCart(page);
   const creditOrderNumber = await checkout(page, { useCredit: true });
-  const creditOrder = db.prepare('SELECT credit_used_paise FROM orders WHERE order_number = ?').get(creditOrderNumber) as {
-    credit_used_paise: number;
-  };
+  const creditOrder = await dbGet<{ credit_used_paise: number }>(
+    'SELECT credit_used_paise FROM orders WHERE order_number = ?',
+    creditOrderNumber,
+  );
+  if (!creditOrder) throw new Error(`Order ${creditOrderNumber} not found`);
   expect(creditOrder.credit_used_paise).toBeGreaterThan(0);
   await shot(page, 'journey-credit-spent');
 });
