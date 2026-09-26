@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, FileText, Star, Upload } from 'lucide-react';
-import { ApiError, api, friendlyMessage, getToken, uploadFile } from '../../lib/api';
+import { API_BASE, ApiError, api, friendlyMessage, getToken, uploadFile } from '../../lib/api';
 import type { DocumentRow, FeedbackRow, ReturnDetail as ReturnDetailData, ReturnEventRow } from '../../lib/api';
 import { EmptyState, ErrorState, FieldError, LoadingState, PageHead, StatusBadge, statusTone } from '../../components/ui';
 import { GENERIC_PRODUCT_IMAGE, orderItemImageFor } from '../../lib/productImage';
@@ -220,7 +220,7 @@ export default function ReturnDetail() {
     setDownloadError(null);
     try {
       const token = getToken();
-      const response = await fetch(`/api/v1/documents/${doc.id}/download`, {
+      const response = await fetch(`${API_BASE}/documents/${doc.id}/download`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) {

@@ -8,7 +8,7 @@
 import { ApiError, getToken } from './api';
 import type { ApiErrorBody } from './api';
 
-const ADMIN_BASE = '/api/v1/admin';
+const ADMIN_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1/admin`;
 
 interface AdOptions {
   method?: string;

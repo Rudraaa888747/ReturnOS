@@ -6,7 +6,7 @@
 
 import { notifyDemoBlocked } from './demoMode'
 
-const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
+export const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 const TOKEN_KEY = 'returnos.token';
 
 export interface ApiErrorBody {

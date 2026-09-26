@@ -7,7 +7,7 @@
 import { ApiError, getToken } from './api';
 import type { ApiErrorBody } from './api';
 
-const WAREHOUSE_BASE = '/api/v1/warehouse';
+const WAREHOUSE_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1/warehouse`;
 
 interface WhOptions {
   method?: string;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Download } from 'lucide-react'
-import { api, friendlyMessage, getToken } from '../../lib/api'
+import { API_BASE, api, friendlyMessage, getToken } from '../../lib/api'
 import type { DocumentRow, ReturnRow } from '../../lib/api'
 import { EmptyState, ErrorState, LoadingState, PageHead } from '../../components/ui'
 import styles from './documents.module.css'
@@ -94,7 +94,7 @@ export default function Documents() {
       // Authenticated download: the plain <a href> carries no Authorization
       // header, so fetch with the bearer token and save the blob instead.
       const token = getToken()
-      const response = await fetch(`/api/v1/documents/${doc.id}/download`, {
+      const response = await fetch(`${API_BASE}/documents/${doc.id}/download`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       if (!response.ok) {
