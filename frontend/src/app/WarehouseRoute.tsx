@@ -2,6 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { useSession } from '../lib/session'
 import { LoadingState } from '../components/ui'
+import { homePathFor } from './roleHome'
 
 /**
  * Warehouse-only route guard. Customers are sent to their own panel and
@@ -26,7 +27,7 @@ export default function WarehouseRoute({ children }: { children: ReactElement })
   }
 
   if (user.role !== 'WAREHOUSE') {
-    return <Navigate to="/customer" replace />
+    return <Navigate to={homePathFor(user.role)} replace />
   }
 
   return children

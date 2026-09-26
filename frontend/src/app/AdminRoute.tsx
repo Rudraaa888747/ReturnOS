@@ -2,6 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { useSession } from '../lib/session'
 import { LoadingState } from '../components/ui'
+import { homePathFor } from './roleHome'
 
 /**
  * Admin-only route guard. Anyone without the ADMIN role lands in their own
@@ -24,7 +25,7 @@ export default function AdminRoute({ children }: { children: ReactElement }) {
   }
 
   if (user.role !== 'ADMIN') {
-    return <Navigate to={user.role === 'WAREHOUSE' ? '/warehouse' : '/customer'} replace />
+    return <Navigate to={homePathFor(user.role)} replace />
   }
 
   return children

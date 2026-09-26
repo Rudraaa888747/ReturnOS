@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
 import { useSession } from '../../lib/session'
 import { ApiError, friendlyMessage } from '../../lib/api'
+import { homePathFor, pathMatchesRole } from '../../app/roleHome'
 import styles from './auth.module.css'
 import { BrandMark } from '../../components/Logo'
 
@@ -18,21 +19,20 @@ export default function Login() {
   const [signedIn, setSignedIn] = useState(false)
 
   const explicitFrom = (location.state as { from?: string } | null)?.from
-  const from = explicitFrom ?? '/customer'
 
-  // Operators land on their own panels when they use the generic login page,
-  // unless they were heading somewhere explicit (e.g. a deep link).
+  // Everyone lands in the panel their role can actually use. A deep link
+  // recorded before sign-in is honoured only when it belongs to that panel:
+  // an operator who was bounced off /customer/orders would otherwise be sent
+  // straight back to a page the customer API rejects.
   useEffect(() => {
     if (signedIn && user) {
-      if (explicitFrom === undefined && user.role === 'WAREHOUSE') {
-        navigate('/warehouse', { replace: true })
-      } else if (explicitFrom === undefined && user.role === 'ADMIN') {
-        navigate('/admin', { replace: true })
-      } else {
-        navigate(from, { replace: true })
-      }
+      const target =
+        explicitFrom !== undefined && pathMatchesRole(explicitFrom, user.role)
+          ? explicitFrom
+          : homePathFor(user.role)
+      navigate(target, { replace: true })
     }
-  }, [signedIn, user, explicitFrom, from, navigate])
+  }, [signedIn, user, explicitFrom, navigate])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()

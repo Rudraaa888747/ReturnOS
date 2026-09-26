@@ -125,11 +125,14 @@ export function friendlyMessage(error: unknown): string {
 /* Domain types mirroring the backend response shapes.                 */
 /* ------------------------------------------------------------------ */
 
+/** The roles the backend issues. Mirrors USER_ROLES on the server. */
+export type UserRole = 'CUSTOMER' | 'WAREHOUSE' | 'ADMIN';
+
 export interface PublicUser {
   id: string;
   email: string;
   fullName: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface AuthResponse {
