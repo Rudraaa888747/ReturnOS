@@ -33,12 +33,57 @@ import org.springframework.web.filter.OncePerRequestFilter;
         response.setStatus(401); response.setContentType("application/json");
         response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}");
       }))
-      .authorizeHttpRequests(a -> a.requestMatchers("/api/health", "/api/v1/auth/**", "/api/v1/meta/**").permitAll().anyRequest().authenticated())
+      .authorizeHttpRequests(a -> a
+        // Preflight carries no credentials, so it must never reach the auth
+        // rules: the CORS filter answers it and the browser then sends the
+        // real request.
+        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+        .requestMatchers("/api/health", "/api/v1/auth/**", "/api/v1/meta/**").permitAll().anyRequest().authenticated())
       .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class).build();
   }
-  @Bean CorsConfigurationSource cors(@org.springframework.beans.factory.annotation.Value("${returnos.cors-origins}") String origins) {
-    var c = new CorsConfiguration(); c.setAllowedOrigins(List.of(origins.split(","))); c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS")); c.setAllowedHeaders(List.of("Authorization","Content-Type","Idempotency-Key")); c.setAllowCredentials(true);
+  /**
+   * Must be named `corsConfigurationSource`. Spring Security looks this bean up
+   * by that exact name; Spring MVC also publishes a CorsConfigurationSource
+   * (the HandlerMappingIntrospector), so a differently named bean leaves the
+   * by-type lookup ambiguous and Security silently falls back to the MVC one.
+   * With no MVC-level CORS registered that rejects every preflight with 403 —
+   * simple GETs such as /api/health keep working, which is what made the
+   * failure look like a configuration-value problem.
+   */
+  @Bean CorsConfigurationSource corsConfigurationSource(@org.springframework.beans.factory.annotation.Value("${returnos.cors-origins}") String origins) {
+    var c = new CorsConfiguration();
+    c.setAllowedOrigins(parseOrigins(origins));
+    c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+    c.setAllowedHeaders(List.of("Authorization","Content-Type","Idempotency-Key"));
+    c.setAllowCredentials(true);
     var source = new UrlBasedCorsConfigurationSource(); source.registerCorsConfiguration("/**", c); return source;
+  }
+
+  /**
+   * Split the configured origin list into exact origins.
+   *
+   * An Origin header is compared byte for byte, so the two ways this is easy
+   * to get wrong in a dashboard are handled here rather than failing as an
+   * opaque 403 on preflight: whitespace after a comma
+   * ("a.com, https://b.com" would otherwise register " https://b.com"), and a
+   * trailing slash (an origin has no path). Blank entries are dropped, and an
+   * empty result fails fast at startup instead of silently allowing nothing.
+   *
+   * Wildcards stay unsupported: credentials are enabled, so the browser
+   * requires an exact origin anyway.
+   */
+  static List<String> parseOrigins(String configured) {
+    var origins = java.util.Arrays.stream(String.valueOf(configured).split(","))
+      .map(String::trim)
+      .filter(o -> !o.isEmpty())
+      .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
+      .distinct()
+      .toList();
+    if (origins.isEmpty()) {
+      throw new IllegalStateException(
+        "No CORS origins configured. Set RETURNOS_CORS_ORIGINS to the exact frontend origin(s), comma separated.");
+    }
+    return origins;
   }
 }
 

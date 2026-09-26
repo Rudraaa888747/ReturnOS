@@ -17,7 +17,10 @@ server:
 returnos:
   jwt-secret: ${JWT_SECRET:}
   jwt-expiration-days: ${JWT_EXPIRATION_DAYS:7}
-  cors-origins: ${CORS_ORIGINS:http://localhost:5173}
+  # Exact frontend origin(s), comma separated. RETURNOS_CORS_ORIGINS is the
+  # canonical name for this property; CORS_ORIGINS is kept as a fallback so
+  # existing deployments keep working.
+  cors-origins: ${RETURNOS_CORS_ORIGINS:${CORS_ORIGINS:http://localhost:5173}}
   demo-mode: ${DEMO_MODE:false}
   # Document storage: 'local' (default, ./uploads) or 's3'. S3 credentials
   # are never configured here — the SDK default chain reads AWS_ACCESS_KEY_ID
