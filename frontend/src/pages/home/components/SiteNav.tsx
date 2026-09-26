@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Menu, Package, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import styles from '../home.module.css'
+import { BrandMark } from '../../../components/Logo'
 
 const LINKS = [
   { href: '#platform', label: 'Platform' },
@@ -41,7 +42,7 @@ export function SiteNav() {
       <div className={styles.topnavInner}>
         <a href="/" className={styles.wordmark} aria-label="ReturnOS home">
           <span className={styles.wordmarkMark} aria-hidden="true">
-            <Package size={15} strokeWidth={2.2} />
+            <BrandMark size={28} />
           </span>
           ReturnOS
           <span className={styles.wordmarkSub}>reverse logistics</span>

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useSession } from '../../lib/session'
 import styles from './layout.module.css'
+import { BrandMark } from '../../components/Logo'
 
 /**
  * Admin console shell. Same operational density as the warehouse floor
@@ -102,7 +103,7 @@ export default function AdminLayout() {
       <aside className={styles.side} aria-label="Admin navigation">
         <div className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true">
-            R
+            <BrandMark size={32} />
           </span>
           <span className={styles.brandText}>
             <span className={styles.brandName}>Admin Console</span>

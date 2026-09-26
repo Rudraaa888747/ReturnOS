@@ -132,7 +132,7 @@ class CareIntegrationTest {
     assertThat(dl.getResponse().getContentAsByteArray()).isEqualTo(pdf);
     assertThat(dl.getResponse().getContentType()).contains("application/pdf");
     assertThat(callAs(token,get("/api/v1/documents/missing/download"),null,404).path("code").asText()).isEqualTo("DOCUMENT_NOT_FOUND");
-    Files.delete(Path.of(uploaded.path("document").path("storage_path").asText()));
+    Files.deleteIfExists(uploads.resolve(Path.of(uploaded.path("document").path("storage_path").asText()).getFileName()));
     assertThat(callAs(token,get("/api/v1/documents/"+docId+"/download"),null,404).path("code").asText()).isEqualTo("FILE_MISSING");
     var other=callAs(null,post("/api/v1/auth/signup"), "{\"email\":\"intruder3@example.test\",\"password\":\"Password123\",\"fullName\":\"Intruder\"}",201);
     assertThat(callAs(other.path("token").asText(),get("/api/v1/documents/"+docId+"/download"),null,404).path("code").asText()).isEqualTo("DOCUMENT_NOT_FOUND");

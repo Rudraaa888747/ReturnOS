@@ -19,3 +19,9 @@ returnos:
   jwt-expiration-days: ${JWT_EXPIRATION_DAYS:7}
   cors-origins: ${CORS_ORIGINS:http://localhost:5173}
   demo-mode: ${DEMO_MODE:false}
+  # Document storage: 'local' (default, ./uploads) or 's3'. S3 credentials
+  # are never configured here — the SDK default chain reads AWS_ACCESS_KEY_ID
+  # / AWS_SECRET_ACCESS_KEY from the environment.
+  storage-provider: ${STORAGE_PROVIDER:local}
+  aws-region: ${AWS_REGION:ap-south-1}
+  aws-s3-bucket: ${AWS_S3_BUCKET:returnos}

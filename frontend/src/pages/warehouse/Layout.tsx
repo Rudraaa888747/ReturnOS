@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, PackageSearch, LogOut, Warehouse, Boxes, Truck, ClipboardList, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, PackageSearch, LogOut, Boxes, Truck, ClipboardList, TrendingUp } from 'lucide-react'
 import { useSession } from '../../lib/session'
 import { wh } from '../../lib/warehouse'
 import type { WarehouseContext } from '../../lib/warehouse'
 import styles from './layout.module.css'
+import { BrandMark } from '../../components/Logo'
 
 /**
  * Operational shell for the warehouse floor. Deliberately denser than the
@@ -40,7 +41,7 @@ export default function WarehouseLayout() {
       <aside className={styles.side} aria-label="Warehouse navigation">
         <div className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true">
-            <Warehouse size={16} />
+            <BrandMark size={32} />
           </span>
           <span className={styles.brandText}>
             <span className={styles.brandName}>ReturnOS Floor</span>

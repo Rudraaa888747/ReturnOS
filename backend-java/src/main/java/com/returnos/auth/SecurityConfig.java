@@ -65,14 +65,40 @@ import org.springframework.web.filter.OncePerRequestFilter;
     }
     chain.doFilter(request,response);
   }
-  /** Demo deployments are read-only for the public demo accounts: only login
-   * (and safe methods) go through; every other authenticated mutation is
-   * rejected here, before any controller runs. */
+  /**
+   * Demo policy for the public demo accounts, enforced before any controller.
+   *
+   * The demo exists to be driven, so the workflows it is meant to show — cart,
+   * checkout, raising and cancelling a return, and the whole warehouse floor
+   * (approve, receive, inspect, dispose) — stay usable. What is blocked is the
+   * work that would damage or pollute the shared demo for the next visitor:
+   * anything under /admin except the support desk, account creation and
+   * password resets, changing the shared account's password, and file uploads.
+   *
+   * The /admin namespace is fail-closed: a new admin write is blocked until it
+   * is explicitly judged demo-safe, rather than being exposed by default.
+   */
   static boolean isDemoBlocked(HttpServletRequest request) {
     String method = request.getMethod();
     if ("GET".equals(method) || "HEAD".equals(method) || "OPTIONS".equals(method)) return false;
-    if ("POST".equals(method) && "/api/v1/auth/login".equals(request.getRequestURI())) return false;
-    return true;
+
+    String path = request.getRequestURI();
+
+    // Only signing in. Signup would fill the shared user table, and the reset
+    // endpoints alter credentials on accounts everyone shares.
+    if (path.startsWith("/api/v1/auth/")) return !"/api/v1/auth/login".equals(path);
+
+    // Admin writes are system-level: users, sites, catalogue, settings, store
+    // credit. The support desk is the one reversible, demo-safe exception.
+    if (path.startsWith("/api/v1/admin/")) return !path.startsWith("/api/v1/admin/support/");
+
+    // A password change would lock every visitor out of the shared account.
+    if ("/api/v1/profile/change-password".equals(path)) return true;
+
+    // Uploads write real objects into the storage bucket on a public URL.
+    if (path.startsWith("/api/v1/uploads/")) return true;
+
+    return false;
   }
   static void deny(HttpServletResponse response, HttpStatus status, String code, String message) throws IOException {
     response.setStatus(status.value()); response.setContentType("application/json");

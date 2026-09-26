@@ -1,6 +1,6 @@
-import { Package } from 'lucide-react'
 import { Curve } from './Curve'
 import styles from '../home.module.css'
+import { BrandMark } from '../../../components/Logo'
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -40,7 +40,7 @@ export function SiteFooter() {
           <div className={styles.footerBrand}>
             <span className={styles.wordmark} aria-hidden="true">
               <span className={styles.wordmarkMark}>
-                <Package size={15} strokeWidth={2.2} />
+                <BrandMark size={28} />
               </span>
               ReturnOS
             </span>

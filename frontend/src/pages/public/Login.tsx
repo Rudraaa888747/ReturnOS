@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogIn, Package } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { useSession } from '../../lib/session'
 import { ApiError, friendlyMessage } from '../../lib/api'
 import styles from './auth.module.css'
+import { BrandMark } from '../../components/Logo'
 
 export default function Login() {
   const { login, user } = useSession()
@@ -61,7 +62,7 @@ export default function Login() {
         <div className={styles.topbarInner}>
           <Link to="/" className={styles.wordmark} aria-label="ReturnOS home">
             <span className={styles.wordmarkMark} aria-hidden="true">
-              <Package size={15} strokeWidth={2.2} />
+              <BrandMark size={28} />
             </span>
             ReturnOS
           </Link>

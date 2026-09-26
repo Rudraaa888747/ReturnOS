@@ -8,7 +8,6 @@ import {
   LogOut,
   MapPin,
   Menu,
-  Package,
   PackageSearch,
   RotateCcw,
   Settings,
@@ -20,6 +19,7 @@ import {
 import { useSession } from '../../lib/session'
 import { useCart } from '../../lib/cart'
 import styles from './layout.module.css'
+import { BrandMark } from '../../components/Logo'
 
 const NAV: Array<{ section: string; links: Array<{ to: string; label: string; icon: React.ReactNode; end?: boolean }> }> = [
   {
@@ -67,7 +67,7 @@ export default function CustomerLayout() {
       <aside className={`${styles.side} ${open ? styles.sideOpen : ''}`} aria-label="Customer navigation">
         <a href="/" className={styles.brand} aria-label="ReturnOS home">
           <span className={styles.brandMark} aria-hidden="true">
-            <Package size={15} strokeWidth={2.2} />
+            <BrandMark size={28} />
           </span>
           ReturnOS
         </a>
@@ -118,7 +118,7 @@ export default function CustomerLayout() {
           </button>
           <span className={styles.brand}>
             <span className={styles.brandMark} aria-hidden="true">
-              <Package size={15} strokeWidth={2.2} />
+              <BrandMark size={28} />
             </span>
             ReturnOS
           </span>

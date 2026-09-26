@@ -16,7 +16,7 @@ function cartBody(quantity: number): Cart {
             sku: 'TEE-CORE-WHT-M',
             name: 'Essential Cotton Tee',
             pricePaise: 129900,
-            imageUrl: '/products/tee.svg',
+            imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
             stock: 100,
             quantity,
             lineTotalPaise: 129900 * quantity,

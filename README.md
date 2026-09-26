@@ -71,7 +71,7 @@ sees everything and writes almost nothing — deliberately.
                   │  ← all business logic lives here  │
                   └────────────────┬──────────────────┘
                                    │
-                        PostgreSQL (Flyway V1..V7)
+                        PostgreSQL (Flyway V1..V8)
 ```
 
 | | |
@@ -79,7 +79,7 @@ sees everything and writes almost nothing — deliberately.
 | **Backend** | Java 21, Spring Boot, Spring Security, JDBC, PostgreSQL, Flyway, JWT + BCrypt |
 | **Frontend** | React 19, Vite 8, react-router 7, CSS Modules + design tokens, lucide-react |
 | **Tests** | JUnit + Spring Boot + PostgreSQL (backend), vitest + Testing Library (frontend), Playwright (e2e) |
-| **Schema** | Flyway migrations `backend-java/src/main/resources/db/migration/V1..V7` |
+| **Schema** | Flyway migrations `backend-java/src/main/resources/db/migration/V1..V8` |
 | **Money** | Integer paise everywhere (`*_paise` columns). Never floats |
 
 The frontend performs **no business logic and no financial writes**. Every
@@ -95,7 +95,7 @@ Requires Java 21, Maven 3.9+ (wrapper included), PostgreSQL 16+, Node 20+.
 # 1. Database
 createdb returnos
 
-# 2. Backend — http://localhost:8080 (Flyway migrates V1..V7 automatically,
+# 2. Backend — http://localhost:8080 (Flyway migrates V1..V8 automatically,
 #    incl. the demo catalogue, users and orders)
 cd backend-java
 export DATABASE_URL=jdbc:postgresql://localhost:5432/returnos
@@ -192,6 +192,16 @@ fallback is included.
 | `JWT_SECRET` | ≥ 32 random characters, never committed |
 | `CORS_ORIGINS` | Production frontend origin(s), comma-separated |
 | `DEMO_MODE` | `true` for the public demo, `false` otherwise |
+| `STORAGE_PROVIDER` | `local` (default) or `s3` for document storage |
+| `AWS_REGION` / `AWS_S3_BUCKET` | S3 region (default `ap-south-1`) and private bucket (default `returnos`) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | **Environment only, never committed.** Read by the AWS SDK default chain |
+
+Document uploads (`POST /api/v1/uploads/return/:id`) store only the S3
+object key (`returns/{returnId}/photos/{generated}`) in PostgreSQL.
+Downloads are ownership-checked, then served from the private bucket —
+streamed through the backend for local storage, or via short-lived (5 min)
+pre-signed URLs for S3. The bucket stays private; credentials never reach
+the frontend.
 | `PORT` | Provided by Railway automatically |
 
 Flyway migrates on boot (deterministic V1..V8, incl. demo seed). Health:
@@ -398,7 +408,7 @@ backend-java/
     care/            documents, uploads, support tickets, feedback
     common/          health, meta, error contract
   src/main/resources/db/migration/
-    V1..V7           Flyway schema + operational/demo seed
+    V1..V8           Flyway schema + operational/demo seed
   src/test/          8 integration test classes (PostgreSQL-backed)
   tools/
     sqlite_to_postgres.py   One-off SQLite → PostgreSQL importer
