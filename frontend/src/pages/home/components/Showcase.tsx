@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const VIEWS = [
@@ -53,7 +54,8 @@ export function Showcase() {
   }
 
   return (
-    <section className={styles.section} id="product" aria-labelledby="product-h">
+    <section className={`${styles.section} ${styles.sectionFlow}`} id="product" aria-labelledby="product-h">
+      <Curve tone="var(--surface-sunken)" variant="drift" />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>

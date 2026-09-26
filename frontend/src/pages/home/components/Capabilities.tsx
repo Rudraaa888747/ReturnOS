@@ -1,5 +1,6 @@
 import { ClipboardCheck, PackageSearch, Route, Scale, ShieldCheck, Stethoscope } from 'lucide-react'
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const CAPS = [
@@ -49,7 +50,8 @@ const CAPS = [
 
 export function Capabilities() {
   return (
-    <section className={styles.section} id="platform" aria-labelledby="platform-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.toneSurface}`} id="platform" aria-labelledby="platform-h">
+      <Curve tone="var(--paper)" variant="rise" />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>

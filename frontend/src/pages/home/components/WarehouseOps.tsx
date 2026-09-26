@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const ROWS = [
@@ -11,7 +12,8 @@ const ROWS = [
 
 export function WarehouseOps() {
   return (
-    <section className={`${styles.section} ${styles.ops}`} id="operations" aria-labelledby="ops-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.ops}`} id="operations" aria-labelledby="ops-h">
+      <Curve tone="var(--surface)" variant="scoop" />
       <div className={styles.wrap}>
         <div className={styles.opsGrid}>
           <Reveal motion="fade">

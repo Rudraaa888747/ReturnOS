@@ -19,6 +19,7 @@ there is exactly one source of truth underneath them.
 - [Architecture](#architecture)
 - [Quick start](#quick-start)
 - [Demo accounts](#demo-accounts)
+- [Deployment](#deployment)
 - [The lifecycle](#the-lifecycle)
 - [Design decisions worth knowing](#design-decisions-worth-knowing)
 - [Data model](#data-model)
@@ -154,12 +155,47 @@ Seeded by Flyway migration `V7__demo_seed.sql` on every fresh database.
 
 | Role | Email | Password |
 |---|---|---|
-| Customer | `rudrachokshi441@gmail.com` | `123456` |
+| Customer | `customer@returnos.test` | `Customer123` |
 | Warehouse | `warehouse@returnos.test` | `Warehouse123` |
 | Admin | `admin@returnos.test` | `Admin123` |
 
 Warehouse and admin accounts are **seeded, never self-registered** — public
 signup always creates a `CUSTOMER`, so there is no privilege-escalation path.
+
+### Public demo mode
+
+Set `DEMO_MODE=true` on a public deployment to make the three demo accounts
+read-only: login and all reads keep working, but any authenticated mutation
+(cart, checkout, returns, warehouse actions, admin writes, signup) is
+rejected by the backend with `403 DEMO_MODE`, and the frontend shows a
+"Demo mode" notice instead of running the action. Leave it `false` (default)
+for development, tests, and private deployments.
+
+---
+
+## Deployment
+
+Frontend → Vercel, backend + PostgreSQL → Railway.
+
+**Frontend (Vercel):** build `npm run build`, output `dist/`. Same-origin
+works out of the box; for split hosting set `VITE_API_URL` to the backend
+origin (e.g. `https://returnos-api.up.railway.app`). A `vercel.json` SPA
+fallback is included.
+
+**Backend (Railway):** deploy `backend-java/` with `./mvnw package` /
+`java -jar target/*.jar`. Required variables:
+
+| Variable | Notes |
+|---|---|
+| `DATABASE_URL` | JDBC URL, e.g. `jdbc:postgresql://host:5432/returnos` (Railway's auto `DATABASE_URL` lacks the `jdbc:` prefix — use a JDBC-style value) |
+| `DATABASE_USERNAME` / `DATABASE_PASSWORD` | PostgreSQL credentials |
+| `JWT_SECRET` | ≥ 32 random characters, never committed |
+| `CORS_ORIGINS` | Production frontend origin(s), comma-separated |
+| `DEMO_MODE` | `true` for the public demo, `false` otherwise |
+| `PORT` | Provided by Railway automatically |
+
+Flyway migrates on boot (deterministic V1..V8, incl. demo seed). Health:
+`GET /api/health`. No scheduler or worker processes are required.
 
 ---
 
@@ -319,7 +355,7 @@ Errors are always `{ code, message, errors? }` — machine-readable codes like
 ## Testing
 
 ```bash
-cd backend-java && .\mvnw.cmd test   # 32 tests, 8 classes (needs PostgreSQL, see above)
+cd backend-java && .\mvnw.cmd test   # 34 tests, 9 classes (needs PostgreSQL, see above)
 cd frontend && npm test               # 28 tests, 5 files
 cd frontend && npm run test:e2e       # 37 Playwright tests vs Java + PostgreSQL
 ```

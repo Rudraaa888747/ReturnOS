@@ -4,6 +4,7 @@ import { Loader2, PackageSearch, Search } from 'lucide-react'
 import { lookupReturn, normalizeId, SAMPLE_IDS } from './demo'
 import type { DemoReturn } from './demo'
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 type State =
@@ -30,7 +31,8 @@ export function TrackReturn() {
   }
 
   return (
-    <section className={styles.section} id="track" aria-labelledby="track-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.toneSurface}`} id="track" aria-labelledby="track-h">
+      <Curve tone="var(--paper)" variant="scoop" tall />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>

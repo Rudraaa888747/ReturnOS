@@ -18,6 +18,12 @@ public class ApiExceptionHandler {
     var errors = e.getBindingResult().getFieldErrors().stream().map(x -> Map.of("field", x.getField(), "message", x.getDefaultMessage())).toList();
     return ResponseEntity.badRequest().body(Map.of("code", "VALIDATION_ERROR", "message", "Request validation failed", "errors", errors));
   }
+  @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class, org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class}) ResponseEntity<Map<String,Object>> malformed(Exception e) {
+    return ResponseEntity.badRequest().body(Map.of("code", "INVALID_REQUEST", "message", "The request could not be understood. Check the URL, IDs and JSON body."));
+  }
+  @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class) ResponseEntity<Map<String,Object>> tooLarge(org.springframework.web.multipart.MaxUploadSizeExceededException e) {
+    return ResponseEntity.badRequest().body(Map.of("code", "FILE_TOO_LARGE", "message", "The uploaded file exceeds the 5MB limit."));
+  }
   private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
   @ExceptionHandler(Exception.class) ResponseEntity<Map<String,Object>> unexpected(Exception e) {
     log.error("Unhandled error", e);

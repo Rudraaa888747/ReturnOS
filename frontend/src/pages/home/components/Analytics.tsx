@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import { useCountUp } from './useCountUp'
 import styles from '../home.module.css'
 
@@ -51,7 +52,8 @@ export function Analytics() {
   }, [])
 
   return (
-    <section className={styles.section} id="analytics" aria-labelledby="analytics-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.toneSurface}`} id="analytics" aria-labelledby="analytics-h">
+      <Curve tone="var(--paper)" variant="rise" flip />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>

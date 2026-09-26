@@ -80,7 +80,7 @@ export default function Signup() {
                 minLength={2}
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
-                placeholder="Rudra Chokshi"
+                placeholder="Alex Kumar"
               />
             </div>
             <div className={styles.field}>

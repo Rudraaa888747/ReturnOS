@@ -44,7 +44,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component class JwtFilter extends OncePerRequestFilter {
   private final JwtService jwt; private final JdbcTemplate jdbc;
-  JwtFilter(JwtService jwt, JdbcTemplate jdbc) { this.jwt = jwt; this.jdbc = jdbc; }
+  private final boolean demoMode;
+  JwtFilter(JwtService jwt, JdbcTemplate jdbc, @org.springframework.beans.factory.annotation.Value("${returnos.demo-mode:false}") boolean demoMode) { this.jwt=jwt; this.jdbc=jdbc; this.demoMode=demoMode; }
+  static final java.util.Set<String> DEMO_ACTORS = java.util.Set.of("customer@returnos.test", "warehouse@returnos.test", "admin@returnos.test");
   @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, jakarta.servlet.ServletException {
     var header = request.getHeader("Authorization");
     if (header == null || !header.startsWith("Bearer ")) { chain.doFilter(request, response); return; }
@@ -53,8 +55,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
       var users = jdbc.query("select id,email,role,active,warehouse_id from users where id=?", (rs, n) -> new CurrentUser(rs.getString("id"),rs.getString("email"),rs.getString("role"),rs.getString("warehouse_id")), id);
       if (users.isEmpty() || !jdbc.queryForObject("select active from users where id=?", Boolean.class, id)) throw new ApiException(HttpStatus.FORBIDDEN,"ACCOUNT_DISABLED","This account has been disabled");
       var user = users.getFirst(); var auth = new UsernamePasswordAuthenticationToken(user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.role()))); org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
-    } catch (ApiException e) { response.setStatus(e.status().value()); response.setContentType("application/json"); response.getWriter().write("{\"code\":\"" + e.code() + "\",\"message\":\"" + e.getMessage() + "\"}"); return;
-    } catch (Exception e) {
+      if (demoMode && DEMO_ACTORS.contains(user.email()) && isDemoBlocked(request)) { deny(response, HttpStatus.FORBIDDEN, "DEMO_MODE", "Demo mode: this action is unavailable in the public demo."); return; }
+    } catch (ApiException e) { deny(response, e.status(), e.code(), e.getMessage()); return; } catch (Exception e) {
       // Invalid token: continue anonymous like TS routes without requireAuth
       // (public endpoints ignore tokens). Protected endpoints still 401 via
       // the entry point above, matching TS requireAuth.
@@ -62,5 +64,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
       chain.doFilter(request, response); return;
     }
     chain.doFilter(request,response);
+  }
+  /** Demo deployments are read-only for the public demo accounts: only login
+   * (and safe methods) go through; every other authenticated mutation is
+   * rejected here, before any controller runs. */
+  static boolean isDemoBlocked(HttpServletRequest request) {
+    String method = request.getMethod();
+    if ("GET".equals(method) || "HEAD".equals(method) || "OPTIONS".equals(method)) return false;
+    if ("POST".equals(method) && "/api/v1/auth/login".equals(request.getRequestURI())) return false;
+    return true;
+  }
+  static void deny(HttpServletResponse response, HttpStatus status, String code, String message) throws IOException {
+    response.setStatus(status.value()); response.setContentType("application/json");
+    response.getWriter().write("{\"code\":\"" + code + "\",\"message\":\"" + message.replace("\"", "'") + "\"}");
   }
 }

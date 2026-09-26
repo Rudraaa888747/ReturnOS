@@ -1,4 +1,5 @@
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const CANDIDATES = [
@@ -17,7 +18,8 @@ const SIGNALS = [
 
 export function Intelligence() {
   return (
-    <section className={styles.section} id="intelligence" aria-labelledby="intel-h">
+    <section className={`${styles.section} ${styles.sectionFlow}`} id="intelligence" aria-labelledby="intel-h">
+      <Curve tone="#10141b" variant="drift" />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>

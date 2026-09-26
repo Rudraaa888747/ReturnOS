@@ -17,7 +17,7 @@ import { dbGet, dbAll, dbRun } from './dbpg.js';
 
 const SHOTS = 'e2e/screenshots';
 
-const CUSTOMER = { email: 'rudrachokshi441@gmail.com', password: '123456' };
+const CUSTOMER = { email: 'customer@returnos.test', password: 'Customer123' };
 const OPERATOR = { email: 'warehouse@returnos.test', password: 'Warehouse123' };
 const ADMIN = { email: 'admin@returnos.test', password: 'Admin123' };
 

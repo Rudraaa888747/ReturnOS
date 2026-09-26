@@ -140,8 +140,8 @@ test.describe('admin navigation', () => {
 
   test('a customer cannot reach the admin area in the browser', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Email').fill('rudrachokshi441@gmail.com');
-    await page.getByLabel('Password').fill('123456');
+    await page.getByLabel('Email').fill('customer@returnos.test');
+    await page.getByLabel('Password').fill('Customer123');
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page).toHaveURL(/\/customer(\/.*)?$/);
 

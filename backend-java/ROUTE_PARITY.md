@@ -56,9 +56,9 @@ $env:TEST_DB_URL="jdbc:postgresql://localhost:5433/returnos_test"; $env:TEST_DB_
 
 ## Final verification (2026-09-25)
 
-Full suite: **32/32 green** (`.\mvnw.cmd test` vs PostgreSQL 16:
-AdminReads 5, AdminWrites 6, Care 3, CustomerParity 3, Scheduler 2,
-Checkout 5, Returns 2, Warehouse 6). Fixes since 2026-09-24:
+Full suite: **34/34 green** (`.\mvnw.cmd test` vs PostgreSQL 16:
+AdminReads 5, AdminWrites 6, Care 3, CustomerParity 3, DemoMode 2,
+Scheduler 2, Checkout 5, Returns 2, Warehouse 6). Fixes since 2026-09-24:
 
 - `FulfillmentService.minutesSince`: pgjdbc returns `TIMESTAMPTZ` as
   `java.sql.Timestamp` rendered in the JVM zone; parsing it as UTC made
@@ -75,7 +75,7 @@ Checkout 5, Returns 2, Warehouse 6). Fixes since 2026-09-24:
   crash found by E2E).
 - `GET /orders/:id/tracking`: `Map.of` NPE on nullable carrier fixed.
 - Adds `V7__demo_seed.sql`: catalogue, categories, demo accounts
-  (`rudrachokshi441@gmail.com`, `maya@example.com`,
+  (`customer@returnos.test`, `maya@example.com`,
   `warehouse@returnos.test`, `admin@returnos.test` — same demo
   credentials as TS `seed.ts`), AVAILABLE buckets, seeded orders
   ORD-2026-1001..1003 + demo return RET-2026-0841, `return_counter=841`.
@@ -94,7 +94,7 @@ pageerrors — untouched).
 
 E2E reset is automated: `frontend/e2e/global-setup-java.ts` wipes the E2E
 schema before each run and the Playwright-managed Java backend recreates it
-via Flyway on boot (deterministic V1..V7 baseline incl. demo seed). Only
+via Flyway on boot (deterministic V1..V8 baseline incl. demo seed). Only
 ever touches the E2E database — never prod.
 
 ## Backend replacement (final)
@@ -103,3 +103,20 @@ The TypeScript/Express/SQLite backend (`backend/`) has been removed. The
 only backend is Java/Spring Boot + PostgreSQL; the only database authority
 is Flyway. `backend-java/tools/sqlite_to_postgres.py` is retained as a
 one-off importer for existing SQLite data.
+
+## Production hardening
+
+- Demo identity: public demo customer is `customer@returnos.test`
+  (`V7` seeds it, `V8` backfills legacy databases). No personal data in
+  seeds, UI, e2e, or docs.
+- Demo mode (`DEMO_MODE=true`): the security filter rejects every
+  authenticated mutation by the three demo accounts with `403 DEMO_MODE`
+  (login + reads unaffected); the frontend shows a Demo Mode dialog.
+  Verified by `DemoModeIntegrationTest` (2 tests).
+- Error contract: `ApiExceptionHandler` maps validation/malformed/too-large
+  to 400 codes and unexpected failures to sanitized 500s; no stack traces
+  or internals leak. Frontend has a global `ErrorBoundary` and
+  `DEMO_MODE`-aware messaging.
+- Deployment: frontend honors `VITE_API_URL` (same-origin `/api/v1` by
+  default); backend is fully env-configured (Railway needs a `jdbc:`-style
+  `DATABASE_URL`); Flyway migrates on boot (deterministic V1..V8).

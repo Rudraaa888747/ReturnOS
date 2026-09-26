@@ -1,9 +1,12 @@
 /* Typed HTTP client for the ReturnOS customer API.
- * Base path is proxied to the backend in development (see vite.config.ts).
- * All requests and responses use proper English error messages from the API.
+ * Same-origin '/api/v1' by default (Vite proxies it in development).
+ * For split production hosting (e.g. Vercel frontend → Railway backend),
+ * set VITE_API_URL to the API origin, e.g. https://api.example.com.
  */
 
-const API_BASE = '/api/v1';
+import { notifyDemoBlocked } from './demoMode'
+
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 const TOKEN_KEY = 'returnos.token';
 
 export interface ApiErrorBody {
@@ -75,6 +78,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       typeof data === 'object' && data !== null && 'code' in data
         ? (data as ApiErrorBody)
         : { code: 'REQUEST_FAILED', message: `Request failed with status ${response.status}` };
+    if (response.status === 403 && body.code === 'DEMO_MODE') notifyDemoBlocked();
     throw new ApiError(response.status, body);
   }
   return data as T;
@@ -100,6 +104,7 @@ export async function uploadFile<T>(path: string, file: File, fields: Record<str
       typeof data === 'object' && data !== null && 'code' in data
         ? (data as ApiErrorBody)
         : { code: 'UPLOAD_FAILED', message: `Upload failed with status ${response.status}` };
+    if (response.status === 403 && body.code === 'DEMO_MODE') notifyDemoBlocked();
     throw new ApiError(response.status, body);
   }
   return data as T;
@@ -107,6 +112,7 @@ export async function uploadFile<T>(path: string, file: File, fields: Record<str
 
 export function friendlyMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'DEMO_MODE') return 'Demo mode: this action is unavailable in the public demo.';
     return error.message;
   }
   if (error instanceof Error) {

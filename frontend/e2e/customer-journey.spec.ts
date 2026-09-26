@@ -224,8 +224,8 @@ async function driveFloorResolution(op: Page, returnNumber: string): Promise<voi
 
 async function loginDemo(page: Page): Promise<void> {
   await page.goto('/login');
-  await page.fill('input[type="email"]', 'rudrachokshi441@gmail.com');
-  await page.fill('input[type="password"]', '123456');
+  await page.fill('input[type="email"]', 'customer@returnos.test');
+  await page.fill('input[type="password"]', 'Customer123');
   await page.click('button:has-text("Sign in")');
   await expect(page).toHaveURL(/\/customer(\/.*)?$/);
 }

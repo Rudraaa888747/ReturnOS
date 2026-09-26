@@ -1,5 +1,6 @@
 import { ArrowRight, FileCheck2, Plug2, ShieldCheck } from 'lucide-react'
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const STEPS = [
@@ -18,7 +19,8 @@ const PROOF = [
 
 export function Process() {
   return (
-    <section className={styles.section} id="how" aria-labelledby="how-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.toneSurface}`} id="how" aria-labelledby="how-h">
+      <Curve tone="var(--paper)" variant="rise" />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>
@@ -47,7 +49,8 @@ export function Process() {
 
 export function Proof() {
   return (
-    <section className={`${styles.section} ${styles.band}`} aria-labelledby="trust-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.toneSunken}`} aria-labelledby="trust-h">
+      <Curve tone="var(--surface)" variant="scoop" flip />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>
@@ -85,7 +88,8 @@ export function Proof() {
 
 export function FinalCta() {
   return (
-    <section className={styles.section} aria-labelledby="cta-h">
+    <section className={`${styles.section} ${styles.sectionFlow}`} aria-labelledby="cta-h">
+      <Curve tone="var(--surface-sunken)" variant="drift" />
       <div className={styles.wrap}>
         <Reveal>
           <div className={styles.bandCta}>

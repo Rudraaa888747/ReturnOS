@@ -10,7 +10,7 @@ export default function Login() {
   const { login, user } = useSession()
   const navigate = useNavigate()
   const location = useLocation()
-  const [email, setEmail] = useState('rudrachokshi441@gmail.com')
+  const [email, setEmail] = useState('customer@returnos.test')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -121,11 +121,15 @@ export default function Login() {
             </span>
           </div>
           <div className={styles.demoBox} aria-label="Demo credentials">
+            <div className={styles.demoTitle}>Public demo — pick a role</div>
             <div>
-              Demo access — Email: <code>rudrachokshi441@gmail.com</code>
+              Customer — <code>customer@returnos.test</code> / <code>Customer123</code>
             </div>
             <div>
-              Password: <code>123456</code>
+              Warehouse — <code>warehouse@returnos.test</code> / <code>Warehouse123</code>
+            </div>
+            <div>
+              Admin — <code>admin@returnos.test</code> / <code>Admin123</code>
             </div>
           </div>
         </div>

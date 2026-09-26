@@ -1,4 +1,5 @@
 import { Reveal } from '../Reveal'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const NODES = [
@@ -14,7 +15,8 @@ const NODES = [
 
 export function Lifecycle() {
   return (
-    <section className={`${styles.section} ${styles.band}`} id="workflow" aria-labelledby="workflow-h">
+    <section className={`${styles.section} ${styles.sectionFlow} ${styles.toneWash}`} id="workflow" aria-labelledby="workflow-h">
+      <Curve tone="var(--surface)" variant="drift" flip />
       <div className={styles.wrap}>
         <Reveal motion="fade">
           <div className={styles.sectionHead}>

@@ -1,4 +1,5 @@
 import { Package } from 'lucide-react'
+import { Curve } from './Curve'
 import styles from '../home.module.css'
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
@@ -33,6 +34,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 export function SiteFooter() {
   return (
     <footer className={styles.footer}>
+      <Curve tone="var(--paper)" variant="rise" flip />
       <div className={styles.wrap}>
         <div className={styles.footerGrid}>
           <div className={styles.footerBrand}>
